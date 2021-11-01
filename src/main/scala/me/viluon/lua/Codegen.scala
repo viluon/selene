@@ -1,12 +1,77 @@
 package me.viluon.lua
 
-import scala.lms.common.{BaseExp, MiscOpsExp, NumericOpsExp, PrimitiveOpsExp, StringOpsExp}
-import scala.lms.internal.GenericCodegen
+import scala.lms.common.{BaseExp, EffectExp, MiscOpsExp, NumericOpsExp, PrimitiveOpsExp, StringOpsExp}
+import scala.lms.internal.{GenericCodegen, GenericNestedCodegen}
 
-trait Codegen extends GenericCodegen
+trait Codegen extends GenericCodegen {
+
+  import java.io.PrintWriter
+  import IR._
+
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = stream.println(s"local ${quote(sym)} = $rhs")
+
+  override def quote(x: Exp[Any]): String = x match {
+    case Const(()) => "nil"
+    case _ => super.quote(x)
+  }
+
+  override def emitBlock(y: Block[Any]): Unit = {
+    stream.println("do -- emitBlock - is this correct?")
+    super.emitBlock(y)
+    stream.println("end")
+  }
+
+  override def emitSource[A: Typ](args: List[IR.Sym[_]],
+                                  body: Block[A],
+                                  className: String,
+                                  out: PrintWriter): List[(IR.Sym[Any], Any)] = {
+    val argsStr = args.map(quote).mkString(", ")
+
+    withStream(out) {
+      stream.println("function " + (if (className.isEmpty) "" else className) + s"($argsStr)")
+      emitBlock(body)
+      val result = getBlockResult(body)
+      if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
+        stream.println(s"return ${quote(result)}")
+      }
+
+      stream.println("end")
+      stream.flush()
+    }
+
+    getFreeDataBlock(body)
+  }
+
+  //  def emitExecution[A: Manifest](a: => Exp[A], out: PrintWriter): List[(Sym[Any], Any)] = {
+  //    val b = reifyBlock(a)
+  //    out.print("(")
+  //    emitSource(Nil, b, "", out)
+  //    out.println(")()")
+  //    getFreeDataBlock(b)
+  //  }
+
+  def emitAssignment(lhs: String, rhs: String): Unit = {
+    stream.println(s"$lhs = $rhs")
+  }
+}
 
 trait BaseGen extends Codegen {
   val IR: BaseExp
+}
+
+// FIXME copied verbatim from js.scala
+trait NestedCodegen extends GenericNestedCodegen with Codegen {
+
+  import IR._
+
+  override def quote(x: Exp[Any]) = x match { // TODO: quirk!
+    case Sym(-1) => sys.error("Sym(-1) not supported")
+    case _ => super.quote(x)
+  }
+}
+
+trait LuaEffectGen extends NestedCodegen with BaseGen {
+  val IR: EffectExp
 }
 
 trait LuaPrimitiveOpsGen extends BaseGen with QuoteGen {

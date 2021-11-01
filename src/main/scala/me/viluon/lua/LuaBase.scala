@@ -9,9 +9,9 @@ trait LuaBase extends Base
   with IfThenElse
   with While
   with BooleanOps
+  with StringOps
   with Variables
   with PrimitiveOps
-  with StringOps
   with MiscOps
 
 trait LuaScala extends LuaBase
@@ -20,3 +20,4 @@ trait LuaScala extends LuaBase
   with LiftNumeric
   with LiftString
   with LiftBoolean
+  with LiftPrimitives

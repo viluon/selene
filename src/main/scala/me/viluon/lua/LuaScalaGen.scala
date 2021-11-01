@@ -1,7 +1,8 @@
 package me.viluon.lua
 
 trait LuaScalaGen
-  extends LuaNumericOpsGen
+  extends LuaEffectGen
+  with LuaNumericOpsGen
   with LuaPrimitiveOpsGen
   with LuaMiscOpsGen
   with LuaStringOpsGen {
