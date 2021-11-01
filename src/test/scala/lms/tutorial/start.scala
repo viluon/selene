@@ -34,6 +34,7 @@ This tutorial is a [literate Scala file](https://github.com/scala-lms/tutorials/
 
 package scala.lms.tutorial
 
+import me.viluon.dsl._
 import scala.lms.common._
 
 class GettingStartedTest extends TutorialFunSuite {

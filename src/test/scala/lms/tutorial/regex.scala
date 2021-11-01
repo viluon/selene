@@ -34,7 +34,7 @@ a bytecode compiler.
 package scala.lms.tutorial
 
 import org.scalatest.FunSuite
-
+import me.viluon.dsl._
 
 /**
 Regular Expression Matcher

@@ -23,7 +23,7 @@ by client code. Thus, they are similar to coroutines.
 */
 
 package scala.lms.tutorial
-
+import me.viluon.dsl._
 
 /**
 Regexp Matchers as Nondeterministic Finite Automata (NFA)

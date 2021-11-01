@@ -2,6 +2,7 @@ package scala.lms.tutorial
 
 import scala.lms.common._
 import scala.reflect.SourceContext
+import me.viluon.dsl._
 
 // tests for the non-staged Scanner library
 // provided by scannerlib.scala

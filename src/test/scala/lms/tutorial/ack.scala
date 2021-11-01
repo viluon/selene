@@ -12,6 +12,7 @@ Outline:
 */
 
 package scala.lms.tutorial
+import me.viluon.dsl._
 
 /**
 Ackermann's Function

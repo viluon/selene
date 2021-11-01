@@ -24,6 +24,7 @@ package scala.lms.tutorial
 
 import scala.lms.common._
 import scala.reflect.SourceContext
+import me.viluon.dsl._
 
 class ShonanTest extends TutorialFunSuite {
   val under = ""

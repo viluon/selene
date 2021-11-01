@@ -9,6 +9,7 @@ Outline:
 package scala.lms.tutorial
 
 import scala.lms.common._
+import me.viluon.dsl._
 
 object query_optc {
 trait QueryCompiler extends Dsl with StagedQueryProcessor

@@ -3,6 +3,7 @@ package scala.lms.tutorial
 import me.viluon.utils
 
 import scala.lms.common._
+import me.viluon.dsl._
 
 
 class QueryLiveStepsTest extends TutorialFunSuite {

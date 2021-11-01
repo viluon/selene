@@ -2,6 +2,7 @@ package scala.lms.tutorial
 
 import scala.lms.common.Compile
 import scala.reflect.SourceContext
+import me.viluon.dsl._
 
 trait TrackConditionals extends Dsl {
   var cs1: Set[Rep[Boolean]] = Set.empty

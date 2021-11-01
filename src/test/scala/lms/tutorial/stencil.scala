@@ -20,6 +20,7 @@ package scala.lms.tutorial
 
 import scala.lms.common.ForwardTransformer
 import scala.reflect.SourceContext
+import me.viluon.dsl._
 
 /**
 ## Stencil Challenge

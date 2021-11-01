@@ -234,6 +234,7 @@ import me.viluon.utils
 
 import eval._
 import scala.lms.common._
+import me.viluon.dsl._
 
 trait EvalDsl extends Dsl with UncheckedOps {
   implicit def valTyp: Typ[Value]

@@ -1,4 +1,4 @@
-package scala.lms.tutorial
+package me.viluon.dsl
 
 import me.viluon.utils
 

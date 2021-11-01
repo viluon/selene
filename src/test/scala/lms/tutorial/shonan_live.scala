@@ -2,6 +2,7 @@ package scala.lms.tutorial
 
 import scala.lms.common._
 import scala.reflect.SourceContext
+import me.viluon.dsl._
 
 // sbt ~test-only *ShonanLive*
 
