@@ -96,11 +96,11 @@ It puts together from scratch all the parts of the LMS framework it needs.
 */
 
 package scala.lms.tutorial.fft
-import scala.lms.tutorial._
+import me.viluon.utils
 
+import scala.lms.tutorial._
 import scala.reflect.SourceContext
 import java.io.PrintWriter
-
 import scala.lms.common._
 import scala.lms.internal._
 import scala.reflect._

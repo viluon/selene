@@ -230,6 +230,8 @@ that the function is no longer tail-recursive.
 The LMS bits
 ------------
 */
+import me.viluon.utils
+
 import eval._
 import scala.lms.common._
 

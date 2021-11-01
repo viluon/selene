@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <profile name="sbt 1" modules="lms-tutorials_5269" />
-    <profile name="sbt 2" modules="lms-tutorials">
+    <profile name="sbt 2" modules="lms-tutorials,selene">
       <option name="deprecationWarnings" value="true" />
       <parameters>
         <parameter value="-Yvirtualize" />

@@ -61,6 +61,8 @@ More details on running the benchmarks are available [here](https://github.com/s
 
 package scala.lms.tutorial
 
+import me.viluon.utils
+
 import scala.lms.common._
 
 /**

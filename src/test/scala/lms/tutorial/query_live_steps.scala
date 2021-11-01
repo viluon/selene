@@ -1,5 +1,7 @@
 package scala.lms.tutorial
 
+import me.viluon.utils
+
 import scala.lms.common._
 
 

@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lms-tutorials.iml" filepath="$PROJECT_DIR$/.idea/modules/lms-tutorials.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lms-tutorials-build.iml" filepath="$PROJECT_DIR$/.idea/modules/lms-tutorials-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/selene.iml" filepath="$PROJECT_DIR$/.idea/modules/selene.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/selene-build.iml" filepath="$PROJECT_DIR$/.idea/modules/selene-build.iml" />
     </modules>
   </component>
 </project>
