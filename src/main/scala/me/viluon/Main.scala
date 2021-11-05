@@ -21,34 +21,30 @@ object Main {
     }
   }
 
-  trait Hello extends LuaScala {
-    def main(name: Rep[String]): Rep[Unit] = {
-      println("Hello, " + name + "!")
-    }
-  }
+  trait Hello extends LuaExpGen {
+    def main(b: Rep[Int]): Rep[Int] = {
+      //      def power(b: Rep[Int], x: Int): Rep[Int] =
+      //        if (x == 0) 1 else b * power(b, x - 1)
+      def square(x: Rep[Int]): Rep[Int] = x * x
 
-  trait Ugh extends LuaExpGen with Hello {
+      def power(b: Rep[Int], n: Int): Rep[Int] =
+        if (n == 0) 1
+        else if (n % 2 == 0) square(power(b, n / 2))
+        else b * power(b, n - 1)
+
+      power(b, 0)
+      //      if (b > 3) 1 else 0
+    }
+
     lazy val code: String = {
       val source = new StringWriter()
-      codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[String], manifestTyp[Unit])
+      codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[Int], manifestTyp[Int])
       source.toString
     }
   }
 
-//  val hello = new Hello with LuaGen
-
   def main(args: Array[String]): Unit = {
-    //    println(F.code)
-    //    println(F.eval(2))
-
-    //    val luaGen = new LuaGen { val IR: hello.type = hello }
-    //    luaGen.emitSource(hello.main, "main", new PrintWriter(System.out))
-
-    //    val scalaGen = new ScalaGen { val IR: hello.type = hello }
-    //    scalaGen.emitSource(hello.main, "main", new PrintWriter(System.out))(manifestTyp[String], manifestTyp[Unit])
-
-
-    val ugh = new Ugh {}
-    println(ugh.code)
+    val hello = new Hello {}
+    println(hello.code)
   }
 }

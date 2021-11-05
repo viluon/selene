@@ -1,6 +1,6 @@
 package me.viluon.lua
 
-import scala.lms.common.{BaseExp, EffectExp, MiscOpsExp, NumericOpsExp, PrimitiveOpsExp, StringOpsExp}
+import scala.lms.common.{BaseExp, BaseGenIfThenElse, EffectExp, EqualExp, IfThenElseExp, MiscOpsExp, NumericOpsExp, OrderingOpsExp, PrimitiveOpsExp, StringOpsExp}
 import scala.lms.internal.{GenericCodegen, GenericNestedCodegen}
 
 trait Codegen extends GenericCodegen {
@@ -16,9 +16,9 @@ trait Codegen extends GenericCodegen {
   }
 
   override def emitBlock(y: Block[Any]): Unit = {
-    stream.println("do -- emitBlock - is this correct?")
+    //    stream.println("do -- emitBlock - is this correct?")
     super.emitBlock(y)
-    stream.println("end")
+    //    stream.println("end")
   }
 
   override def emitSource[A: Typ](args: List[IR.Sym[_]],
@@ -50,8 +50,8 @@ trait Codegen extends GenericCodegen {
   //    getFreeDataBlock(b)
   //  }
 
-  def emitAssignment(lhs: String, rhs: String): Unit = {
-    stream.println(s"$lhs = $rhs")
+  override def emitAssignment(lhs: Sym[Any], rhs: String): Unit = {
+    stream.println(s"${quote(lhs)} = $rhs")
   }
 }
 
@@ -122,6 +122,54 @@ trait LuaNumericOpsGen extends LuaPrimitiveOpsGen {
     case NumericMinus(a, b) => emitValDef(sym, q"$a - $b")
     case NumericTimes(a, b) => emitValDef(sym, q"$a * $b")
     case NumericDivide(a, b) => emitValDef(sym, q"$a / $b")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaOrderingOpsGen extends BaseGen with QuoteGen {
+  val IR: OrderingOpsExp
+
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case OrderingGT(lhs, rhs) => emitValDef(sym, q"$lhs > $rhs")
+    case OrderingLT(lhs, rhs) => emitValDef(sym, q"$lhs < $rhs")
+    case OrderingGTEQ(lhs, rhs) => emitValDef(sym, q"$lhs >= $rhs")
+    case OrderingLTEQ(lhs, rhs) => emitValDef(sym, q"$lhs <= $rhs")
+    case OrderingEquiv(lhs, rhs) => emitValDef(sym, q"$lhs == $rhs")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaEqualGen extends BaseGen with QuoteGen {
+  val IR: EqualExp
+
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case Equal(a, b) => emitValDef(sym, q"$a == $b")
+    case NotEqual(a, b) => emitValDef(sym, q"$a ~= $b")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaIfThenElseGen extends BaseGenIfThenElse with LuaEffectGen with QuoteGen {
+  val IR: IfThenElseExp
+
+  import IR._
+
+  override def emitNode(sym: IR.Sym[Any], rhs: IR.Def[Any]): Unit = rhs match {
+    case IfThenElse(cond, thn, els) =>
+      stream.println(q"local $sym")
+      stream.println(q"if $cond then")
+      emitBlock(thn)
+      //      emitAssignment(sym, quote(getBlockResult(thn)))
+      stream.println(q"$sym = ${getBlockResult(thn)}")
+      stream.println("else")
+      emitBlock(els)
+      //      emitAssignment(sym, quote(getBlockResult(els)))
+      stream.println(q"$sym = ${getBlockResult(els)}")
+      stream.println("end")
     case _ => super.emitNode(sym, rhs)
   }
 }
