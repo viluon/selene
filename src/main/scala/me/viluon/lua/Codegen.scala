@@ -1,6 +1,6 @@
 package me.viluon.lua
 
-import scala.lms.common.{BaseExp, BaseGenIfThenElse, EffectExp, EqualExp, IfThenElseExp, MiscOpsExp, NumericOpsExp, OrderingOpsExp, PrimitiveOpsExp, StringOpsExp}
+import scala.lms.common.{BaseExp, BaseGenFunctions, BaseGenIfThenElse, BaseGenWhile, EffectExp, EqualExp, FunctionsExp, IfThenElseExp, MiscOpsExp, NumericOpsExp, OrderingOpsExp, PrimitiveOpsExp, StringOpsExp, TupledFunctionsExp, VariablesExp, WhileExp}
 import scala.lms.internal.{GenericCodegen, GenericNestedCodegen}
 
 trait Codegen extends GenericCodegen {
@@ -60,7 +60,8 @@ trait BaseGen extends Codegen {
 }
 
 // FIXME copied verbatim from js.scala
-trait NestedCodegen extends GenericNestedCodegen with Codegen {
+trait LuaNestedCodegen extends GenericNestedCodegen with Codegen with QuoteGen {
+  val IR: EffectExp
 
   import IR._
 
@@ -68,9 +69,30 @@ trait NestedCodegen extends GenericNestedCodegen with Codegen {
     case Sym(-1) => sys.error("Sym(-1) not supported")
     case _ => super.quote(x)
   }
+
+  /**
+   * Taken from [[scala.lms.internal.ScalaNestedCodegen]]
+   */
+  // emit forward decls for recursive vals
+  override def traverseStmsInBlock[A](stms: List[Stm]): Unit = {
+    recursive foreach emitForwardDef
+    super.traverseStmsInBlock(stms)
+  }
+
+  def emitForwardDef(sym: Sym[Any]): Unit = {
+    stream.println(q"local $sym")
+  }
+
+  // special case for recursive vals
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+    if (recursive contains sym)
+      stream.println(q"$sym = $rhs") // we have a forward declaration above.
+    else
+      super.emitValDef(sym, rhs)
+  }
 }
 
-trait LuaEffectGen extends NestedCodegen with BaseGen {
+trait LuaEffectGen extends LuaNestedCodegen with BaseGen {
   val IR: EffectExp
 }
 
@@ -170,6 +192,70 @@ trait LuaIfThenElseGen extends BaseGenIfThenElse with LuaEffectGen with QuoteGen
       //      emitAssignment(sym, quote(getBlockResult(els)))
       stream.println(q"$sym = ${getBlockResult(els)}")
       stream.println("end")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaWhileGen extends BaseGenWhile with LuaEffectGen with QuoteGen {
+  val IR: WhileExp
+
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case While(cond, body) =>
+      emitValDef(sym, q"${Const(())}")
+      val cond_fun = q"cond_$sym"
+      stream.println(s"function $cond_fun()")
+      emitBlock(cond)
+      stream.println(q"return ${getBlockResult(cond)}")
+      stream.println("end")
+      stream.println(s"while $cond_fun() do")
+      emitBlock(body)
+      stream.println("end")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaVariableGen extends LuaEffectGen with QuoteGen {
+  val IR: VariablesExp
+
+  import IR._
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case ReadVar(Variable(a)) => emitValDef(sym, q"$a")
+    case NewVar(init) => emitValDef(sym.asInstanceOf[Sym[Variable[Any]]], q"$init")
+    case Assign(Variable(a), b) => stream.println(q"$a = $b")
+    case VarPlusEquals(Variable(a), b) => stream.println(q"$a = $a + $b")
+    case VarMinusEquals(Variable(a), b) => stream.println(q"$a = $a - $b")
+    case _ => super.emitNode(sym, rhs)
+  }
+}
+
+trait LuaFunctionGen extends BaseGenFunctions with LuaEffectGen with QuoteGen {
+  val IR: TupledFunctionsExp
+
+  import IR._
+
+  private def emitFunctionBody(body: Block[Any]): Unit = {
+    emitBlock(body)
+    val result = getBlockResult(body)
+    if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
+      stream.println(q"return $result")
+    }
+    stream.println("end")
+  }
+
+  override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case Lambda(_, UnboxedTuple(args), body) =>
+      emitValDef(sym, "function" + args.map(quote).mkString("(", ", ", ")"))
+      emitFunctionBody(body)
+    case Lambda(_, arg, body) =>
+      emitValDef(sym, q"function($arg)")
+      emitFunctionBody(body)
+    case Apply(fun, UnboxedTuple(args)) =>
+      emitValDef(sym, q"$fun" + args.map(quote).mkString("(", ", ", ")"))
+    case Apply(fun, arg) =>
+      emitValDef(sym, q"$fun($arg)")
     case _ => super.emitNode(sym, rhs)
   }
 }

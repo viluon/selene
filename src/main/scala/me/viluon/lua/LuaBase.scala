@@ -2,6 +2,9 @@ package me.viluon.lua
 
 import scala.lms.common._
 
+/**
+ * The core of the Lua DSL.
+ */
 trait LuaBase extends Base
   with NumericOps
   with OrderingOps
@@ -11,9 +14,13 @@ trait LuaBase extends Base
   with BooleanOps
   with StringOps
   with Variables
+  with TupledFunctions
   with PrimitiveOps
   with MiscOps
 
+/**
+ * Provides Lua DSL functionality based on [[LuaBase]] with lifting.
+ */
 trait LuaScala extends LuaBase
   with LiftVariables
   with LiftEquals
