@@ -1,5 +1,7 @@
 package me.viluon.lua
 
+import me.viluon.lua.codegen.LuaCodegen
+
 import java.io.{PrintWriter, StringWriter}
 import scala.lms.common._
 
@@ -17,22 +19,24 @@ trait LuaScalaExp extends LuaScala
   with FunctionsExp
   with TupledFunctionsExp
   with TupleOpsExp
+  with StructExpOpt
+  with StructExpOptCommon
   with VariablesExpOpt
   with PrimitiveOpsExpOpt
   with StringOpsExp
   with MiscOpsExp
 
 /**
- * [[LuaExpGen]] extends Lua expressions in Scala ([[LuaScalaExp]]) with codegen ([[LuaScalaGen]]).
+ * [[LuaDSL]] extends Lua expressions in Scala ([[LuaScalaExp]]) with codegen ([[LuaCodegen]]).
  */
-trait LuaExpGen[-A, +B] extends LuaScalaExp {
+abstract class LuaDSL[A: Manifest, B: Manifest] extends LuaScalaExp {
   t =>
 
   override implicit def arrayTyp[T](implicit evidence$7: Typ[T]): Typ[Array[T]] = ???
 
   def main(input: Rep[A]): Rep[B]
 
-  val codegen = new LuaScalaGen {
+  val codegen = new LuaCodegen {
     val IR: t.type = t
 
     //    override def emitSource[A](args: List[Sym[_]],
@@ -49,9 +53,27 @@ trait LuaExpGen[-A, +B] extends LuaScalaExp {
     //    override def traverseBlock[A](block: Block[A]): Unit = ???
   }
 
+  def formatLua(code: String, indentString: String = "  "): String = {
+    val it = for {line <- code.lines} yield {
+      // FIXME incomplete keyword list, doesn't handle () [] {}
+      "\\b(function|then|elseif|else|end)\\b".r.findFirstMatchIn(line) match {
+        case Some(x) => x.toString match {
+          case "function" | "then" => (0, 1)
+          case "elseif" | "else" => (-1, 0)
+          case "end" => (-1, -1)
+        }
+        case None => (0, 0)
+      }
+    }
+    code.lines.zip(it).foldLeft((0, List[String]()))({
+      case ((indent, acc), (line, (curr, next))) =>
+        (indent + next, indentString * (indent + curr) + line :: acc)
+    })._2.reverse.mkString("\n")
+  }
+
   lazy val code: String = {
     val source = new StringWriter()
-    codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[Int], manifestTyp[Int])
-    source.toString
+    codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
+    formatLua(source.toString)
   }
 }

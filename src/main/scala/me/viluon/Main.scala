@@ -1,10 +1,7 @@
 package me.viluon
 
-import scala.lms.common._
 import me.viluon.dsl._
-import me.viluon.lua.{LuaExpGen, LuaScala, LuaScalaExp, ScalaGen, LuaScalaGen => LuaGen}
-
-import java.io.{PrintWriter, StringWriter}
+import me.viluon.lua.LuaDSL
 
 object Main {
   object F extends DslDriver[Int, Int] {
@@ -16,7 +13,7 @@ object Main {
     }
   }
 
-  object Hello extends LuaExpGen {
+  object Hello extends LuaDSL[Int, Int] {
     def main(b: Rep[Int]): Rep[Int] = {
       def square(x: Rep[Int]): Rep[Int] = x * x
 
@@ -24,6 +21,12 @@ object Main {
         if (n == 0) 1
         else if (n % 2 == 0) square(power(b, n / 2))
         else b * power(b, n - 1)
+
+      def foo(a: Rep[Int], b: Rep[Int]): Rep[Int] = a + b
+      def oof(a: Rep[Int], b: Rep[Int]): Rep[Int] = a - b
+
+      val bar = if (b > 3) foo _ else oof _
+      println(bar(b, 3))
 
       power(b, 5)
     }

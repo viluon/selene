@@ -1,6 +1,4 @@
-package me.viluon.lua
-
-// borrowed from https://github.com/js-scala/js-scala/blob/0b5771853a35a37d011f0ddebf770fdcd7fc8bc1/core/src/main/scala/scala/js/gen/QuoteGen.scala
+package me.viluon.lua.codegen
 
 import scala.lms.internal.GenericCodegen
 
@@ -17,6 +15,7 @@ import scala.lms.internal.GenericCodegen
  * Provided `bar` is a `Rep[_]` and `bah` is not.
  */
 trait QuoteGen extends GenericCodegen {
+
   import language.implicitConversions
 
   trait Quote {

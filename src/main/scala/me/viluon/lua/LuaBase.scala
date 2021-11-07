@@ -14,6 +14,7 @@ trait LuaBase extends Base
   with BooleanOps
   with StringOps
   with Variables
+  with StructOps
   with TupledFunctions
   with PrimitiveOps
   with MiscOps
