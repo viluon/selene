@@ -1,9 +1,13 @@
 package me.viluon.lua
 
+import me.viluon.dsl.{DslDriver, DslExp, DslGen}
+import me.viluon.lua.LuaUtils.formatLua
 import me.viluon.lua.codegen.LuaCodegen
 
 import java.io.{PrintWriter, StringWriter}
+import scala.language.reflectiveCalls
 import scala.lms.common._
+import scala.lms.internal.{GenericCodegen, ScalaCodegen, ScalaCompile}
 
 /**
  * Lua expressions in Scala, with DSL functionality from [[LuaScala]].
@@ -16,8 +20,7 @@ trait LuaScalaExp extends LuaScala
   with IfThenElseExpOpt
   with WhileExp
   //  with BooleanOpsExp
-  with FunctionsExp
-  with TupledFunctionsExp
+  with TupledFunctionsRecursiveExp
   with TupleOpsExp
   with StructExpOpt
   with StructExpOptCommon
@@ -53,27 +56,35 @@ abstract class LuaDSL[A: Manifest, B: Manifest] extends LuaScalaExp {
     //    override def traverseBlock[A](block: Block[A]): Unit = ???
   }
 
-  def formatLua(code: String, indentString: String = "  "): String = {
-    val it = for {line <- code.lines} yield {
-      // FIXME incomplete keyword list, doesn't handle () [] {}
-      "\\b(function|then|elseif|else|end)\\b".r.findFirstMatchIn(line) match {
-        case Some(x) => x.toString match {
-          case "function" | "then" => (0, 1)
-          case "elseif" | "else" => (-1, 0)
-          case "end" => (-1, -1)
-        }
-        case None => (0, 0)
-      }
-    }
-    code.lines.zip(it).foldLeft((0, List[String]()))({
-      case ((indent, acc), (line, (curr, next))) =>
-        (indent + next, indentString * (indent + curr) + line :: acc)
-    })._2.reverse.mkString("\n")
-  }
-
   lazy val code: String = {
     val source = new StringWriter()
     codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
     formatLua(source.toString)
   }
+}
+
+abstract class Retargetable[A: Manifest, B: Manifest] extends LuaScalaExp with DslExp {
+  self =>
+  type SourceEmitter = {
+    def emitSource[T, R](f: Rep[T] => Rep[R], n: String, o: PrintWriter)(implicit ev1: Typ[T], ev2: Typ[R]): List[(Sym[Any], Any)]
+  }
+
+  def main(input: Rep[A]): Rep[B]
+
+  val luaGen = new LuaCodegen {
+    override val IR: self.type = self
+  }
+
+  val scalaGen = new DslGen {
+    override val IR: DslExp = self
+  }
+
+  private def emit(gen: SourceEmitter): String = {
+    val source = new StringWriter()
+    gen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
+    source.toString
+  }
+
+  lazy val lua: String = formatLua(emit(luaGen))
+  lazy val scala: String = emit(scalaGen.asInstanceOf[SourceEmitter])
 }
