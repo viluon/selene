@@ -8,15 +8,18 @@ trait TermGen extends LuaEffectGen with QuoteGen {
   import IR._
 
   override def quote(x: Exp[Any]): String = x match {
-    case Const(c: Colour.Colour) => quote(c.id)
+    case Const(c: Colours.Colour) => quote(c.id)
     case _ => super.quote(x)
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case GlobalTerm() => emitValDef(sym, "term")
-    case TermWrite(t, str) => emitValDef(sym, q"$t.write($str)")
-    case TermSetTextColour(t, c) => emitValDef(sym, q"$t.setTextColour($c)")
-    case TermSetBackgroundColour(t, c) => emitValDef(sym, q"$t.setBackgroundColour($c)")
+    case TermWrite(t) => emitValDef(sym, q"$t.write")
+    case TermSetCursorPos(t) => emitValDef(sym, q"$t.setCursorPos")
+    case TermSetTextColour(t) => emitValDef(sym, q"$t.setTextColour")
+    case TermSetBackgroundColour(t) => emitValDef(sym, q"$t.setBackgroundColour")
+    case TermGetSize(t) => emitValDef(sym, q"{ $t.getSize() }")
+    case TermClear(t) => emitValDef(sym, q"$t.clear")
     case _ => super.emitNode(sym, rhs)
   }
 }

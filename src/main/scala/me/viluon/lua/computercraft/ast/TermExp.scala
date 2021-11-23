@@ -3,26 +3,52 @@ package me.viluon.lua.computercraft.ast
 import me.viluon.lua.LuaScalaExp
 import me.viluon.lua.computercraft.lang.Term
 
-import scala.lms.common.EffectExp
 import scala.reflect.SourceContext
 
 trait TermExp extends Term with LuaScalaExp {
-  import Colour.Colour
+  import Colours.Colour
 
-  case class GlobalTerm() extends Def[TermLike]
+  implicit class TermLikeOps(t: Exp[TermLike]) {
+    def setCursorPos(x: Exp[Int], y: Exp[Int])(implicit pos: SourceContext): Exp[Unit] = setCursorPos((x, y))(pos) // not a real error
+    def setCursorPos(pos: Exp[(Int, Int)])(implicit ctx: SourceContext): Exp[Unit] = termLike_setCursorPos(ctx)(t)(pos)
+    def write(txt: Exp[String])(implicit pos: SourceContext): Exp[Unit] = termLike_write(pos)(t)(txt)
+    def setTextColour(c: Exp[Colour])(implicit pos: SourceContext): Exp[Unit] = termLike_setTextColour(pos)(t)(c)
+    def setBackgroundColour(c: Exp[Colour])(implicit pos: SourceContext): Exp[Unit] = termLike_setBackgroundColour(pos)(t)(c)
+    def clear()(implicit pos: SourceContext): Exp[Unit] = termLike_clear(pos)(t)(())
+    def getSize()(implicit pos: SourceContext): Exp[Array[Int]] = termLike_getSize(pos)(t)
+  }
 
-  case class TermSetCursorPos(t: Exp[TermLike], x: Exp[Int], y: Exp[Int]) extends Def[Unit]
-  case class TermWrite(t: Exp[TermLike], str: Exp[String]) extends Def[Unit]
-  case class TermSetTextColour(t: Exp[TermLike], c: Exp[Colour]) extends Def[Unit]
-  case class TermSetBackgroundColour(t: Exp[TermLike], c: Exp[Colour]) extends Def[Unit]
+  implicit def liftColour(c: Colour): Rep[Colour] = unit(c)
+
+  case class GlobalTerm() extends Def[TermAPI]
+
+  case class TermSetCursorPos(t: Exp[TermLike]) extends Def[((Int, Int)) => Unit]
+  case class TermWrite(t: Exp[TermLike]) extends Def[String => Unit]
+  case class TermSetTextColour(t: Exp[TermLike]) extends Def[Colour => Unit]
+  case class TermSetBackgroundColour(t: Exp[TermLike]) extends Def[Colour => Unit]
+  case class TermClear(t: Exp[TermLike]) extends Def[Unit => Unit]
+  case class TermGetSize(t: Exp[TermLike]) extends Def[Array[Int]]
 
   implicit val termLikeManifest = ManifestTyp(implicitly[Manifest[TermLike]])
+  implicit val termApiManifest = ManifestTyp(implicitly[Manifest[TermAPI]])
   implicit val colourManifest = ManifestTyp(implicitly[Manifest[Colour]])
 
-  override def globalTerm: Exp[TermLike] = reflectEffect(GlobalTerm())
+  override def globalTerm(implicit pos: SourceContext): Exp[TermAPI] = toAtom(GlobalTerm())
 
-  override def termLike_setCursorPos(t: Exp[TermLike], x: Exp[Int], y: Exp[Int]): Exp[Unit] = reflectEffect(TermSetCursorPos(t, x, y))
-  override def termLike_write(t: Exp[TermLike], str: Exp[String]): Exp[Unit] = reflectEffect(TermWrite(t, str))
-  override def termLike_setTextColour(t: Exp[TermLike], c: Exp[Colour]): Exp[Unit] = reflectEffect(TermSetTextColour(t, c))
-  override def termLike_setBackgroundColour(t: Exp[TermLike], c: Exp[Colour]): Exp[Unit] = reflectEffect(TermSetBackgroundColour(t, c))
+  def expOfFunIsFunOfExp[A: Typ, B: Typ](f: Exp[A => B]): Exp[A] => Exp[B] = x => doApply(f, x)
+  def impureFun[A: Typ, B: Typ](d: Def[A => B])(implicit pos: SourceContext): Exp[A] => Exp[B] =
+    expOfFunIsFunOfExp(toAtom(d))
+
+  override def termLike_setCursorPos(implicit pos: SourceContext): Exp[TermLike] => Exp[(Int, Int)] => Exp[Unit] =
+    t => impureFun(TermSetCursorPos(t))
+  override def termLike_write(implicit pos: SourceContext): Exp[TermLike] => Exp[String] => Exp[Unit] =
+    t => impureFun(TermWrite(t))
+  override def termLike_setTextColour(implicit pos: SourceContext): Exp[TermLike] => Exp[Colour] => Exp[Unit] =
+    t => impureFun(TermSetTextColour(t))
+  override def termLike_setBackgroundColour(implicit pos: SourceContext): Exp[TermLike] => Exp[Colour] => Exp[Unit] =
+    t => impureFun(TermSetBackgroundColour(t))
+  override def termLike_clear(implicit pos: SourceContext): Exp[TermLike] => Exp[Unit] => Exp[Unit] =
+    t => impureFun(TermClear(t))
+  override def termLike_getSize(implicit pos: SourceContext): Exp[TermLike] => Exp[Array[Int]] =
+    t => reflectEffect(TermGetSize(t))
 }

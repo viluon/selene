@@ -8,8 +8,12 @@ trait LuaWhileGen extends BaseGenWhile with LuaEffectGen with QuoteGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
+    case While(Block(Const(c)), body) =>
+      stream.println(q"while $c do")
+      emitBlock(body)
+      stream.println("end")
     case While(cond, body) =>
-      emitValDef(sym, q"${Const(())}")
+//      emitValDef(sym, q"${Const(())}")
       val cond_fun = q"cond_$sym"
       stream.println(s"function $cond_fun()")
       emitBlock(cond)

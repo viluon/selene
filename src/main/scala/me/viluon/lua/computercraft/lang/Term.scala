@@ -1,9 +1,10 @@
 package me.viluon.lua.computercraft.lang
 
 import scala.lms.common.Base
+import scala.reflect.SourceContext
 
 trait Term extends Base {
-  object Colour extends Enumeration {
+  object Colours extends Enumeration {
     type Colour = Value
     val White    : Colour = Value(1)
     val Orange   : Colour = Value(2)
@@ -22,21 +23,17 @@ trait Term extends Base {
     val Red      : Colour = Value(16384)
     val Black    : Colour = Value(32768)
   }
-  import Colour._
+  import Colours.Colour
 
   class TermLike
+  trait TermAPI extends TermLike
 
-  implicit class TermLikeOps(t: Rep[TermLike]) {
-    def setCursorPos(x: Rep[Int], y: Rep[Int]): Rep[Unit] = termLike_setCursorPos(t, x, y)
-    def write(str: Rep[String]): Rep[Unit] = termLike_write(t, str)
-    def setTextColour(c: Rep[Colour]): Rep[Unit] = termLike_setTextColour(t, c)
-    def setBackgroundColour(c: Rep[Colour]): Rep[Unit] = termLike_setBackgroundColour(t, c)
-  }
+  def globalTerm(implicit pos: SourceContext): Rep[TermAPI]
 
-  def globalTerm: Rep[TermLike]
-
-  def termLike_setCursorPos(t: Rep[TermLike], x: Rep[Int], y: Rep[Int]): Rep[Unit]
-  def termLike_write(t: Rep[TermLike], str: Rep[String]): Rep[Unit]
-  def termLike_setTextColour(t: Rep[TermLike], c: Rep[Colour]): Rep[Unit]
-  def termLike_setBackgroundColour(t: Rep[TermLike], c: Rep[Colour]): Rep[Unit]
+  def termLike_setCursorPos(implicit pos: SourceContext): Rep[TermLike] => Rep[(Int, Int)] => Rep[Unit]
+  def termLike_write(implicit pos: SourceContext): Rep[TermLike] => Rep[String] => Rep[Unit]
+  def termLike_setTextColour(implicit pos: SourceContext): Rep[TermLike] => Rep[Colour] => Rep[Unit]
+  def termLike_setBackgroundColour(implicit pos: SourceContext): Rep[TermLike] => Rep[Colour] => Rep[Unit]
+  def termLike_clear(implicit pos: SourceContext): Rep[TermLike] => Rep[Unit] => Rep[Unit]
+  def termLike_getSize(implicit pos: SourceContext): Rep[TermLike] => Rep[Array[Int]]
 }

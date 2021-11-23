@@ -15,9 +15,11 @@ trait LuaCodegen
     with LuaVariableGen
     with LuaFunctionGen
     with LuaStructGen
+    with LuaObjOpsGen
     with LuaTupleGen
     with LuaEqualGen
     with LuaMiscOpsGen
-    with LuaStringOpsGen {
+    with LuaStringOpsGen
+    with LuaArrayOpsGen {
   val IR: LuaScalaExp
 }

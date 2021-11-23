@@ -19,7 +19,7 @@ trait LuaPrimitiveOpsGen extends BaseGen with QuoteGen {
     case ObjIntegerParseInt(s) => emitValDef(sym, q"parseInt($s, 10)")
     case ObjIntMaxValue() => emitValDef(sym, "Number.MAX_VALUE")
     case ObjIntMinValue() => emitValDef(sym, "Number.MIN_VALUE")
-    case IntDivide(lhs, rhs) => emitValDef(sym, q"Math.floor($lhs / $rhs)")
+    case IntDivide(lhs, rhs) => emitValDef(sym, q"math.floor($lhs / $rhs)")
     case IntMod(lhs, rhs) => emitValDef(sym, q"$lhs % $rhs")
     case IntBinaryOr(lhs, rhs) => emitValDef(sym, q"$lhs | $rhs")
     case IntBinaryAnd(lhs, rhs) => emitValDef(sym, q"$lhs & $rhs")

@@ -15,9 +15,12 @@ trait LuaBase extends Base
   with StringOps
   with Variables
   with StructOps
+  with ObjectOps
   with TupledFunctions
   with PrimitiveOps
   with MiscOps
+  with SeqOps
+  with ArrayOps
 
 /**
  * Provides Lua DSL functionality based on [[LuaBase]] with lifting.
@@ -29,3 +32,4 @@ trait LuaScala extends LuaBase
   with LiftString
   with LiftBoolean
   with LiftPrimitives
+  with LiftArrays

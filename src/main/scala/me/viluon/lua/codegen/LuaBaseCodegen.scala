@@ -1,17 +1,41 @@
 package me.viluon.lua.codegen
 
 import scala.lms.internal.GenericCodegen
+import scala.reflect.SourceContext
 
-trait LuaBaseCodegen extends GenericCodegen {
+trait LuaBaseCodegen extends GenericCodegen with QuoteGen {
 
   import IR._
 
   import java.io.PrintWriter
 
-  override def emitValDef(sym: Sym[Any], rhs: String): Unit = stream.println(s"local ${quote(sym)} = $rhs")
+  override def emitValDef(sym: Sym[Any], rhs: String): Unit = stream.println({
+    // FIXME this should be done in sth like a DCE pass
+    if (sym.tp.<:<(ManifestTyp(manifest[Unit]))) rhs
+    else q"local $sym = $rhs"
+  })
+
+  def originalContext(x: SourceContext): SourceContext =
+    x.parent.filter(_.parent.nonEmpty).map(originalContext).getOrElse(x)
+
+  def shortName(str: String): String =
+    "^([a-zA-Z]*)".r.findFirstMatchIn(str).map(_.group(0)).map {
+      case "String" => "str"
+      case "Function" => "fn"
+      case "boolean" => "bool"
+      case s => s
+    }.getOrElse(str)
 
   override def quote(x: Exp[Any]): String = x match {
     case Const(()) => "nil"
+    case s@Sym(n) if s.pos.nonEmpty => originalContext(s.pos.head)
+      .bindings.headOption.flatMap({ case (str, _) => Option(str) })
+      .map(_.replace('$', '_'))
+      .getOrElse({
+        val name = s.tp.runtimeClass.getSimpleName
+        if (!name.endsWith("[]")) shortName(name)
+        else shortName(name.substring(0, name.length - 2)) + "s"
+      }) + q"$n"
     case _ => super.quote(x)
   }
 
@@ -19,6 +43,15 @@ trait LuaBaseCodegen extends GenericCodegen {
     //    stream.println("do -- emitBlock - is this correct?")
     super.emitBlock(y)
     //    stream.println("end")
+  }
+
+  def emitFunctionBody(body: Block[Any]): Unit = {
+    emitBlock(body)
+    val result = getBlockResult(body)
+    if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
+      stream.println(q"return $result")
+    }
+    stream.println("end")
   }
 
   override def emitSource[A: Typ](args: List[IR.Sym[_]],
@@ -29,13 +62,7 @@ trait LuaBaseCodegen extends GenericCodegen {
 
     withStream(out) {
       stream.println("function " + (if (className.isEmpty) "" else className) + s"($argsStr)")
-      emitBlock(body)
-      val result = getBlockResult(body)
-      if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
-        stream.println(s"return ${quote(result)}")
-      }
-
-      stream.println("end")
+      emitFunctionBody(body)
       stream.flush()
     }
 
@@ -51,6 +78,6 @@ trait LuaBaseCodegen extends GenericCodegen {
   //  }
 
   override def emitAssignment(lhs: Sym[Any], rhs: String): Unit = {
-    stream.println(s"${quote(lhs)} = $rhs")
+    stream.println(q"$lhs = $rhs")
   }
 }

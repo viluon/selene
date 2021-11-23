@@ -7,15 +7,6 @@ trait LuaFunctionGen extends BaseGenFunctions with LuaEffectGen with QuoteGen {
 
   import IR._
 
-  private def emitFunctionBody(body: Block[Any]): Unit = {
-    emitBlock(body)
-    val result = getBlockResult(body)
-    if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
-      stream.println(q"return $result")
-    }
-    stream.println("end")
-  }
-
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case Lambda(_, UnboxedTuple(args), body) =>
       emitValDef(sym, "function" + args.map(quote).mkString("(", ", ", ")"))

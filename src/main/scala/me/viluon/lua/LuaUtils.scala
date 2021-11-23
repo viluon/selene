@@ -4,9 +4,9 @@ object LuaUtils {
   def formatLua(code: String, indentString: String = "  "): String = {
     val it = for {line <- code.lines} yield {
       // FIXME incomplete keyword list, doesn't handle () [] {}
-      "\\b(function|then|elseif|else|end)\\b".r.findFirstMatchIn(line) match {
+      "\\b(function|then|do|elseif|else|end)\\b".r.findFirstMatchIn(line) match {
         case Some(x) => x.toString match {
-          case "function" | "then" => (0, 1)
+          case "function" | "then" | "do" => (0, 1)
           case "elseif" | "else" => (-1, 0)
           case "end" => (-1, -1)
         }
