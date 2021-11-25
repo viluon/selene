@@ -28,7 +28,7 @@ trait Term extends Base {
   class TermLike
   trait TermAPI extends TermLike
 
-  def globalTerm(implicit pos: SourceContext): Rep[TermAPI]
+  def term(implicit pos: SourceContext): Rep[TermAPI]
 
   def termLike_setCursorPos(implicit pos: SourceContext): Rep[TermLike] => Rep[(Int, Int)] => Rep[Unit]
   def termLike_write(implicit pos: SourceContext): Rep[TermLike] => Rep[String] => Rep[Unit]

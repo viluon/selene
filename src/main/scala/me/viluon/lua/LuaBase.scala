@@ -1,5 +1,7 @@
 package me.viluon.lua
 
+import me.viluon.lua.lang.LuaUnpack
+
 import scala.lms.common._
 
 /**
@@ -21,6 +23,7 @@ trait LuaBase extends Base
   with MiscOps
   with SeqOps
   with ArrayOps
+  with LuaUnpack
 
 /**
  * Provides Lua DSL functionality based on [[LuaBase]] with lifting.

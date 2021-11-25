@@ -10,9 +10,10 @@ trait OsGen extends LuaEffectGen with QuoteGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case OsClock() => emitValDef(sym, "os.clock()")
-    case OsPullEvent() => emitValDef(sym, "{ os.pullEvent() }")
-    case OsQueueEvent(e) => emitValDef(sym, q"os.queueEvent(unpack($e))")
+    case GlobalOs() => emitValDef(sym, "os")
+    case OsClock(os) => emitValDef(sym, q"$os.clock")
+    case OsPullEvent(os) => emitValDef(sym, q"$os.pullEvent")
+    case OsQueueEvent(os) => emitValDef(sym, q"$os.queueEvent")
     case _ => super.emitNode(sym, rhs)
   }
 }

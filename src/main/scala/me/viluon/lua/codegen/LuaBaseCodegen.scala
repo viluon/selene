@@ -28,14 +28,21 @@ trait LuaBaseCodegen extends GenericCodegen with QuoteGen {
 
   override def quote(x: Exp[Any]): String = x match {
     case Const(()) => "nil"
-    case s@Sym(n) if s.pos.nonEmpty => originalContext(s.pos.head)
-      .bindings.headOption.flatMap({ case (str, _) => Option(str) })
-      .map(_.replace('$', '_'))
-      .getOrElse({
-        val name = s.tp.runtimeClass.getSimpleName
-        if (!name.endsWith("[]")) shortName(name)
-        else shortName(name.substring(0, name.length - 2)) + "s"
-      }) + q"$n"
+    case s@Sym(n) if s.pos.nonEmpty =>
+      val orgContext = originalContext(s.pos.head)
+      if (s.tp.runtimeClass == classOf[(_) => _])
+        // name functions after the methods that produced them
+        orgContext.methodName + q"$n"
+      else orgContext
+        // try getting the binding from the Scala code
+        .bindings.headOption.flatMap({ case (str, _) => Option(str) })
+        .map(_.replace('$', '_'))
+        // let intermediaries fallback to a name derived from the type
+        .getOrElse({
+          val name = s.tp.runtimeClass.getSimpleName
+          if (!name.endsWith("[]")) shortName(name)
+          else shortName(name.substring(0, name.length - 2)) + "s"
+        }) + q"$n"
     case _ => super.quote(x)
   }
 

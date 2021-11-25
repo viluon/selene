@@ -1,11 +1,12 @@
 package me.viluon.lua.computercraft.ast
 
 import me.viluon.lua.LuaScalaExp
+import me.viluon.lua.ast.LuaFunctionUtils
 import me.viluon.lua.computercraft.lang.Term
 
 import scala.reflect.SourceContext
 
-trait TermExp extends Term with LuaScalaExp {
+trait TermExp extends Term with LuaScalaExp with LuaFunctionUtils {
   import Colours.Colour
 
   implicit class TermLikeOps(t: Exp[TermLike]) {
@@ -18,7 +19,7 @@ trait TermExp extends Term with LuaScalaExp {
     def getSize()(implicit pos: SourceContext): Exp[Array[Int]] = termLike_getSize(pos)(t)
   }
 
-  implicit def liftColour(c: Colour): Rep[Colour] = unit(c)
+  implicit def liftColour(c: Colour)(implicit pos: SourceContext): Rep[Colour] = unit(c)
 
   case class GlobalTerm() extends Def[TermAPI]
 
@@ -33,11 +34,7 @@ trait TermExp extends Term with LuaScalaExp {
   implicit val termApiManifest = ManifestTyp(implicitly[Manifest[TermAPI]])
   implicit val colourManifest = ManifestTyp(implicitly[Manifest[Colour]])
 
-  override def globalTerm(implicit pos: SourceContext): Exp[TermAPI] = toAtom(GlobalTerm())
-
-  def expOfFunIsFunOfExp[A: Typ, B: Typ](f: Exp[A => B]): Exp[A] => Exp[B] = x => doApply(f, x)
-  def impureFun[A: Typ, B: Typ](d: Def[A => B])(implicit pos: SourceContext): Exp[A] => Exp[B] =
-    expOfFunIsFunOfExp(toAtom(d))
+  override def term(implicit pos: SourceContext): Exp[TermAPI] = toAtom(GlobalTerm())
 
   override def termLike_setCursorPos(implicit pos: SourceContext): Exp[TermLike] => Exp[(Int, Int)] => Exp[Unit] =
     t => impureFun(TermSetCursorPos(t))
