@@ -39,7 +39,11 @@ trait LuaBaseCodegen extends GenericCodegen with QuoteGen {
         .map(_.replace('$', '_'))
         // let intermediaries fallback to a name derived from the type
         .getOrElse({
-          val name = s.tp.runtimeClass.getSimpleName
+          val name =
+            (if (s.tp.runtimeClass == classOf[Exp[_]])
+              s.tp.typeArguments.head.runtimeClass
+            else s.tp.runtimeClass).getSimpleName
+
           if (!name.endsWith("[]")) shortName(name)
           else shortName(name.substring(0, name.length - 2)) + "s"
         }) + q"$n"

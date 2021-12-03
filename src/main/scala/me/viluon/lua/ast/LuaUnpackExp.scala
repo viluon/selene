@@ -1,24 +1,64 @@
 package me.viluon.lua.ast
 
+import me.viluon.Main
 import me.viluon.lua.lang.LuaUnpack
 
 import scala.lms.common.{ArrayOpsExp, TupledFunctionsExp}
 import scala.reflect.SourceContext
 
 trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
+  // TODO could we deprecate this in favour of LMS's UnboxedTuple?
   case class LuaUnboxedTuple[T: Typ](t: T)
-  case class Unpack[T: Typ](x: Array[Exp[Any]]) extends Def[T]
-  class UnboxedSym[T: Typ](id: Int) extends Sym[T](id) {
+  // ignored by code generation
+  case class DummyUnboxedSymUse(sym: UnboxedSym[_]) extends Def[Unit]
+
+  object LuaUnboxedTuple {
+    def unapply[T <: Product](obj: Exp[LuaUnboxedTuple[T]])(implicit pos: SourceContext): Option[T] = obj match {
+      case UnboxedSym(_, xs) => Some(((xs.map(sym => sym.withPos(pos :: sym.pos)) match {
+        case Nil => new Product {
+          override def productElement(n: Int): Any = ()
+          override def productArity: Int = 0
+          override def canEqual(that: Any): Boolean =
+            that.isInstanceOf[Unit] || that.isInstanceOf[this.type]
+        }
+        case Seq(a) => Tuple1(a)
+        case Seq(a, b) => (a, b)
+        case Seq(a, b, c) => (a, b, c)
+        case Seq(a, b, c, d) => (a, b, c, d)
+        case Seq(a, b, c, d, e) => (a, b, c, d, e)
+        case _ => ???
+      }): Product).asInstanceOf[T])
+      case _ => None
+    }
+
+//    def unapply[T <: Product : Typ](obj: LuaUnboxedTuple[T]): Option[T] = Some(obj.t)
+  }
+
+  case class Unpack[T: Typ](x: Exp[Array[Any]]) extends Def[T]
+  class UnboxedSym[T: Typ](id: Int) extends Sym[T](id) with Product {
     val components: Seq[Sym[Any]] = {
-      val tp = implicitly[Typ[T]]
+      // T is a LuaUnboxedTuple, so its first (and only)
+      // type argument is the actual tuple this sym represents
+      val typ = implicitly[Typ[T]].typeArguments.head
       // FIXME maybe it'd be better to move this check to fresh,
       //       so that an unboxed sym isn't even constructed
       //       in such a case
-      if (tp.typeArguments.head.typeArguments.isEmpty)
-        List(fresh(tp.typeArguments.head))
-      else tp.typeArguments.head.typeArguments.map {
+      if (typ.typeArguments.isEmpty)
+        List(fresh(typ))
+      else typ.typeArguments.map {
         t: Typ[_] => fresh(t)
       }
+    }
+
+    // this ensures code that accesses only individual fields of the tuple
+    // isn't moved out of the scope of the unboxed definition
+    components.foreach {
+      sym => createDefinition(sym, DummyUnboxedSymUse(this))
+    }
+
+    override def withPos(pos: List[SourceContext]): Sym[T] = {
+      components.foreach(_.withPos(pos))
+      super.withPos(pos)
     }
   }
 
@@ -52,7 +92,12 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
       )(implicitly[Typ[T]])
     } else super.fresh[T]
 
-  override def unpack[T: Typ](arr: Array[Exp[Any]])(implicit pos: SourceContext): Exp[T] = arr match {
+  override def boundSyms(e: Any): List[Sym[Any]] = e match {
+    case Unpack(x) => boundSyms(x)
+    case _ => super.boundSyms(e)
+  }
+
+  override def unpack[T <: Product : Typ](arr: Exp[Array[_]])(implicit pos: SourceContext): Exp[LuaUnboxedTuple[T]] = arr match {
 //    case Def(ArrayFromSeq(xs)) =>
 //      def go[A: Typ](xs: Seq[Exp[A]]): (List[Exp[A]], Exp[Any]) = xs match {
 //        case (k@Const(_)) +: xss => go(xss) match {
@@ -65,6 +110,10 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
 //      // a constant prefix can be factored out of the unpack call
 //      val (ks, suffix) = go(xs)
 //      UnboxedTuple(ks :+ suffix)(implicitly[Typ[Any]])
-    case _ => reflectEffect(Unpack(arr)(implicitly[Typ[T]]))
+    // this is where a LuaUnboxedTuple disappears -- it only serves
+    // as a compile-time marker and is actually represented by an array
+    case _: Sym[_] =>
+      val sym = arr.asInstanceOf[Sym[Array[Any]]]
+      reflectEffect(Unpack(sym)(lutIsTyp(implicitly[Typ[T]])), Read(List(sym)))
   }
 }

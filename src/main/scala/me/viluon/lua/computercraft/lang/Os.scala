@@ -5,9 +5,10 @@ import scala.reflect.SourceContext
 
 trait Os extends StructOps with ArrayOps {
   type Event
+  type LuaUnboxedTuple[_]
 
   trait OsAPI {
-    def pullEvent()(implicit pos: SourceContext): Rep[Event]
+    def pullEvent()(implicit pos: SourceContext): Rep[LuaUnboxedTuple[(Any, Any, Any, Any, Any)]]
     def clock()(implicit pos: SourceContext): Rep[Double]
     def queueEvent(e: Rep[String])(implicit pos: SourceContext): Rep[Unit]
     def queueEvent[A1: Typ](e: Rep[String], a1: Rep[A1])(implicit pos: SourceContext): Rep[Unit]

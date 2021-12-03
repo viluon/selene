@@ -8,12 +8,15 @@ trait LuaUnpackGen extends LuaBaseCodegen {
 
   override def quote(x: Exp[Any]): String = x match {
     case UnboxedSym(realSym, components) =>
-      components.map(quote).map(s => q"unbx_${realSym.id}_$s").mkString(", ")
+      components.map(quote).mkString(q"--[[ unboxed[${components.size}] ${realSym.id} ]] ", ", ", "")
+//    case LuaUnboxedTuple(t) =>
+//      t.asInstanceOf[Product].productIterator.map(x => quote(x.asInstanceOf[Exp[Any]])).mkString(", ")
     case _ => super.quote(x)
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case Unpack(x) => emitValDef(sym, x.map(quote).mkString("unpack(", ", ", ")"))
+    case Unpack(x) => emitValDef(sym, q"unpack($x)")
+    case DummyUnboxedSymUse(_) => ()
     case _ => super.emitNode(sym, rhs)
   }
 }
