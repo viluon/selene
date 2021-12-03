@@ -15,13 +15,15 @@ object Main {
       val y = h / 2
       term.setTextColour(Colours.LightBlue)
       term.setBackgroundColour(Colours.Grey)
-      val eoq = Array("end_of_queue").asInstanceOf[Rep[Array[Any]]]
+      val eoq: Rep[String] = "end_of_queue"
       os.queueEvent(eoq)
+
+      os.queueEvent("hello", "world", "!")
 
       while (true) {
         import Events.EventOps
         val ev = os.pullEvent()
-        if (ev.tag == eoq.asInstanceOf[Rep[Event]].tag) {
+        if (ev.tag == eoq) {
           os.queueEvent(eoq)
         }
 

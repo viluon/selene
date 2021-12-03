@@ -27,9 +27,23 @@ trait OsExp extends Os with LuaScalaExp with LuaFunctionUtils { self: LiftArrays
   implicit class OsOps(os: Exp[OsAPI]) extends OsAPI {
     override def pullEvent()(implicit pos: SourceContext): Exp[Event] = applyImpureFun(OsPullEvent(os), ())
     override def clock()(implicit pos: SourceContext): Exp[Double] = applyImpureFun(OsClock(os), ())
-    override def queueEvent(e: Exp[Any]*)(implicit pos: SourceContext): Exp[Unit] = {
-      val f = impureFun(OsQueueEvent(os))(manifestTyp, implicitly, implicitly)
-      f(unpack[UnboxedTuple[String]](e.toArray)(manifestTyp, implicitly))
+    private def queueFun[T: Typ](implicit pos: SourceContext): Exp[LuaUnboxedTuple[T]] => Exp[Unit] = {
+      impureFun(OsQueueEvent(os))(manifestTyp, implicitly, implicitly)
+    }
+
+    override def queueEvent(e: Exp[String])(implicit pos: SourceContext): Exp[Unit] = {
+      val f = queueFun[String]
+      f(unpack[LuaUnboxedTuple[String]](List(e).toArray)(lutIsTyp, implicitly))
+    }
+
+    override def queueEvent[A1: Typ](e: Exp[String], a1: Exp[A1])(implicit pos: SourceContext): Exp[Unit] = {
+      val f = queueFun[(String, A1)]
+      f(unpack[LuaUnboxedTuple[(String, A1)]](List(e, a1).toArray)(lutIsTyp, implicitly))
+    }
+
+    override def queueEvent[A1: Typ, A2: Typ](e: Exp[String], a1: Exp[A1], a2: Exp[A2])(implicit pos: SourceContext): Exp[Unit] = {
+      val f = queueFun[(String, A1, A2)]
+      f(unpack[LuaUnboxedTuple[(String, A1, A2)]](List(e, a1, a2).toArray)(lutIsTyp, implicitly))
     }
   }
 
@@ -38,7 +52,7 @@ trait OsExp extends Os with LuaScalaExp with LuaFunctionUtils { self: LiftArrays
 
   case class OsPullEvent(os: Exp[OsAPI]) extends Def[Unit => Event]
   case class OsClock(os: Exp[OsAPI]) extends Def[Unit => Double]
-  case class OsQueueEvent(os: Exp[OsAPI]) extends Def[UnboxedTuple[_] => Unit]
+  case class OsQueueEvent(os: Exp[OsAPI]) extends Def[LuaUnboxedTuple[_] => Unit]
 
   override def os(implicit pos: SourceContext): Exp[OsAPI] = toAtom(GlobalOs())
 }
