@@ -28,6 +28,9 @@ trait LuaPrimitiveOpsGen extends BaseGen with QuoteGen {
     case IntFloatValue(lhs) => emitValDef(sym, q"$lhs")
     case IntBitwiseNot(lhs) => emitValDef(sym, q"~$lhs")
     case IntToLong(lhs) => emitValDef(sym, q"$lhs")
+    case IntToFloat(lhs) => emitValDef(sym, q"$lhs")
+    case IntToDouble(lhs) => emitValDef(sym, q"$lhs")
+    case FloatToDouble(lhs) => emitValDef(sym, q"$lhs")
     case LongBinaryOr(lhs, rhs) => emitValDef(sym, q"$lhs | $rhs")
     case LongBinaryAnd(lhs, rhs) => emitValDef(sym, q"$lhs & $rhs")
     case LongShiftLeft(lhs, rhs) => emitValDef(sym, q"$lhs << $rhs")
@@ -36,6 +39,10 @@ trait LuaPrimitiveOpsGen extends BaseGen with QuoteGen {
     case IntPlus(lhs, rhs) => emitValDef(sym, q"$lhs + $rhs")
     case IntTimes(lhs, rhs) => emitValDef(sym, q"$lhs * $rhs")
     case IntMinus(lhs, rhs) => emitValDef(sym, q"$lhs - $rhs")
+    case DoublePlus(lhs, rhs) => emitValDef(sym, q"$lhs + $rhs")
+    case DoubleTimes(lhs, rhs) => emitValDef(sym, q"$lhs * $rhs")
+    case DoubleMinus(lhs, rhs) => emitValDef(sym, q"$lhs - $rhs")
+    case DoubleDivide(lhs, rhs) => emitValDef(sym, q"$lhs / $rhs")
     case _ => super.emitNode(sym, rhs)
   }
 }

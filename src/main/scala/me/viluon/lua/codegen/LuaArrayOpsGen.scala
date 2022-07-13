@@ -9,6 +9,9 @@ trait LuaArrayOpsGen extends LuaEffectGen {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case ArrayApply(arr, n) => emitValDef(sym, q"$arr[$n]")
     case ArrayFromSeq(xs) => emitValDef(sym, xs.map(quote).mkString("{ ", ", ", " }"))
+    case ArrayUpdate(arr, i, x) => stream.println(q"$arr[$i] = $x")
+    case ArrayNew(size) => emitValDef(sym, "{}") // TODO
+    case ArrayLength(arr) => emitValDef(sym, q"#$arr")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -15,7 +15,7 @@ trait LuaWhileGen extends BaseGenWhile with LuaEffectGen with QuoteGen {
     case While(cond, body) =>
 //      emitValDef(sym, q"${Const(())}")
       val cond_fun = q"cond_$sym"
-      stream.println(s"function $cond_fun()")
+      stream.println(s"local function $cond_fun()")
       emitBlock(cond)
       stream.println(q"return ${getBlockResult(cond)}")
       stream.println("end")

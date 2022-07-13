@@ -22,6 +22,8 @@ abstract class CCProgram extends LuaScalaExp with ComputerCraftExp {
     def emitSource[T, R](f: Rep[T] => Rep[R], n: String, o: PrintWriter)(implicit ev1: Typ[T], ev2: Typ[R]): List[(Sym[Any], Any)]
   }
 
+  val nil: Rep[Unit] = unit(())
+
   implicit val initialCtx = SourceContext("main", Nil)
 
   def main(): Rep[Unit]

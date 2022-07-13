@@ -30,23 +30,25 @@ trait LuaBaseCodegen extends GenericCodegen with QuoteGen {
     case Const(()) => "nil"
     case s@Sym(n) if s.pos.nonEmpty =>
       val orgContext = originalContext(s.pos.head)
-      if (s.tp.runtimeClass == classOf[(_) => _])
-        // name functions after the methods that produced them
-        orgContext.methodName + q"$n"
-      else orgContext
-        // try getting the binding from the Scala code
-        .bindings.headOption.flatMap({ case (str, _) => Option(str) })
-        .map(_.replace('$', '_'))
-        // let intermediaries fallback to a name derived from the type
-        .getOrElse({
-          val name =
-            (if (s.tp.runtimeClass == classOf[Exp[_]])
-              s.tp.typeArguments.head.runtimeClass
-            else s.tp.runtimeClass).getSimpleName
+      val nm =
+        if (s.tp.runtimeClass == classOf[(_) => _])
+          // name functions after the methods that produced them
+          orgContext.methodName
+        else orgContext
+            // try getting the binding from the Scala code
+            .bindings.headOption.flatMap({ case (str, _) => Option(str) })
+            .map(_.replace('$', '_'))
+            // let intermediaries fallback to a name derived from the type
+            .getOrElse({
+              val name =
+                  (if (s.tp.runtimeClass == classOf[Exp[_]])
+                    s.tp.typeArguments.head.runtimeClass
+                  else s.tp.runtimeClass).getSimpleName
 
-          if (!name.endsWith("[]")) shortName(name)
-          else shortName(name.substring(0, name.length - 2)) + "s"
-        }) + q"$n"
+              if (!name.endsWith("[]")) shortName(name)
+              else shortName(name.substring(0, name.length - 2)) + "s"
+            })
+      nm.replace(' ', '_') + q"_$n"
     case _ => super.quote(x)
   }
 

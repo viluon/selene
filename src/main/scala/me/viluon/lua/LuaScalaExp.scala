@@ -2,7 +2,7 @@ package me.viluon.lua
 
 import me.viluon.dsl.{DslExp, DslGen}
 import me.viluon.lua.LuaUtils.formatLua
-import me.viluon.lua.ast.{LuaArrayOpsExpOpt, LuaTupledFunctionsExp, LuaUnpackExp}
+import me.viluon.lua.ast.{LuaArrayBufferOpsExp, LuaArrayOpsExpOpt, LuaMathExp, LuaModExp, LuaStringExp, LuaTupledFunctionsExp, LuaUnpackExp}
 import me.viluon.lua.codegen.LuaCodegen
 
 import java.io.{PrintWriter, StringWriter}
@@ -20,7 +20,7 @@ trait LuaScalaExp extends LuaScala
   with EqualExpOpt
   with IfThenElseExpOpt
   with WhileExp
-  //  with BooleanOpsExp
+  with BooleanOpsExpOpt
   with LuaTupledFunctionsExp
   with TupledFunctionsRecursiveExp
   with TupleOpsExp
@@ -34,8 +34,12 @@ trait LuaScalaExp extends LuaScala
   with SeqOpsExp
   with ArrayOpsExp
   with ArrayOpsExpOpt
+  with LuaArrayBufferOpsExp
   with LuaArrayOpsExpOpt
   with LuaUnpackExp
+  with LuaStringExp
+  with LuaModExp
+  with LuaMathExp
 
 /**
  * [[LuaDSL]] extends Lua expressions in Scala ([[LuaScalaExp]]) with codegen ([[LuaCodegen]]).

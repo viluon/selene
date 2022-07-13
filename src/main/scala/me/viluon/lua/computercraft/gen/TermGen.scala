@@ -9,6 +9,7 @@ trait TermGen extends LuaEffectGen with QuoteGen {
 
   override def quote(x: Exp[Any]): String = x match {
     case Const(c: Colours.Colour) => quote(c.id)
+    case ColourToInt(c) => quote(c)
     case _ => super.quote(x)
   }
 
@@ -20,6 +21,7 @@ trait TermGen extends LuaEffectGen with QuoteGen {
     case TermSetBackgroundColour(t) => emitValDef(sym, q"$t.setBackgroundColour")
     case TermGetSize(t) => emitValDef(sym, q"{ $t.getSize() }")
     case TermClear(t) => emitValDef(sym, q"$t.clear")
+    case UnsafeCoerce(src) => emitValDef(sym, q"$src")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -20,6 +20,11 @@ trait LuaCodegen extends LuaEffectGen
   with LuaMiscOpsGen
   with LuaStringOpsGen
   with LuaArrayOpsGen
-  with LuaUnpackGen {
+  with LuaUnpackGen
+  with LuaStringGen
+  with LuaModGen
+  with LuaBooleanOpsGen
+  with LuaMathGen
+  with LuaArrayBufferOpsGen {
   val IR: LuaScalaExp
 }

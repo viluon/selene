@@ -16,4 +16,7 @@ trait LuaFunctionUtils {
     val f = impureFun(d)
     f(arg)
   }
+
+  def pureFun[A: Typ, B: Typ](d: Def[A => B])(implicit pos: SourceContext): Exp[A] => Exp[B] =
+    x => reflectEffect(Apply(toAtom(d), unbox(x)), Read(syms(x)))
 }
