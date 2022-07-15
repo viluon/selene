@@ -8,9 +8,8 @@ trait LuaArrayOpsGen extends LuaEffectGen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case ArrayApply(arr, n) => emitValDef(sym, l"$arr[$n]")
-    case ArrayFromSeq(xs) =>
-      emitValDef(sym, LLExpr(xs.map(quote).mkString("{ ", ", ", " }"), xs.flatMap(syms).toList))
-    case ArrayUpdate(arr, i, x) => emitAssignment(l"$arr[$i]", lowerExp(x))
+    case ArrayFromSeq(xs) => emitValDef(sym, LLExpr.fromSeq(xs))
+    case ArrayUpdate(arr, i, x) => emitAssignment(l"$arr[$i]", l"$x")
     case ArrayNew(size) => emitValDef(sym, l"{}") // TODO
     case ArrayLength(arr) => emitValDef(sym, l"#$arr")
     case _ => super.emitNode(sym, rhs)

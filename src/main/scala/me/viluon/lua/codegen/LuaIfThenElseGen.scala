@@ -9,13 +9,13 @@ trait LuaIfThenElseGen extends LuaEffectGen with QuoteGen {
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case IfThenElse(cond, thn, els) if sym.tp <:< typ[Unit] =>
-      luaCode += LLIf(lowerExp(cond))
+      luaCode += LLIf(l"$cond")
       emitBlock(thn)
       emitElse(els)
       luaCode += LLEnd()
     case IfThenElse(cond, thn, els) =>
       luaCode += LLLocal(sym)
-      luaCode += LLIf(lowerExp(cond))
+      luaCode += LLIf(l"$cond")
       emitBlock(thn)
       emitAssignment(sym, getBlockResult(thn))
       emitElse(els, emitAssignment(sym, getBlockResult(els)))

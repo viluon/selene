@@ -32,6 +32,6 @@ trait LuaNestedCodegen extends DummyNestedCodegen with LuaCoreCodegen with Quote
     if (recursive contains sym)
       emitAssignment(sym, rhs) // we have a forward declaration above.
     else
-      super.emitValDef(sym, LLExpr(quote(rhs), syms(rhs)))
+      super.emitValDef(sym, l"$rhs")
   }
 }

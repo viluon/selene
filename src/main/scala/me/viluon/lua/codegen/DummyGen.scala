@@ -23,7 +23,7 @@ trait DummyGen extends BlockTraversal {
     throw new GenerationFailedException("don't know how to generate code for: " + rhs)
 
   override def traverseStm(stm: Stm): Unit = stm match {
-    case TP(sym, rhs) => emitNode(sym,rhs)
+    case TP(sym, rhs) => emitNode(sym, rhs)
     case _ => throw new GenerationFailedException("don't know how to generate code for statement: " + stm)
   }
 }

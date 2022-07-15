@@ -18,10 +18,11 @@ trait LuaStructGen extends BaseGen with QuoteGen {
         case (name, value) => q"\t${accessString(name, "")} = $value;\n"
       }) + "}"
       val uses = fields.map(_._2).flatMap(syms).toList
-      emitValDef(sym, LLExpr(str, uses))
+      emitValDef(sym, LLExpr(???, uses))
     case FieldApply(struct, index) =>
       val uses = syms(struct) ++ syms(index)
-      emitValDef(sym, LLExpr(q"$struct${accessString(index)}", uses))
+      val str = q"$struct${accessString(index)}"
+      emitValDef(sym, LLExpr(???, uses))
     case _ => super.emitNode(sym, rhs)
   }
 }

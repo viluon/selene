@@ -2,7 +2,7 @@ package me.viluon.lua.codegen.lowLevel
 
 import me.viluon.lua.codegen.QuoteGen
 
-import scala.lms.internal.Expressions
+import scala.lms.internal.{Effects, Expressions}
 
 sealed trait LLStmt {
   def asLua: String
@@ -10,18 +10,50 @@ sealed trait LLStmt {
 
 trait LLStmtOps { self: QuoteGen =>
   sealed trait LLExpr {
-    val expr: String
+    def expr(uses: List[self.IR.Sym[Any]]): String
     val uses: List[self.IR.Sym[Any]]
   }
 
   object LLExpr {
-    def unapply(e: LLExpr): Option[(String, List[self.IR.Sym[Any]])] = Some((e.expr, e.uses))
-    def apply(e: String, uses: List[self.IR.Sym[Any]]): LLExpr = LLExprStandalone(e, uses)
+    def unapply(e: LLExpr): Option[(String, List[self.IR.Sym[Any]])] = Some((e.expr(e.uses), e.uses))
+    def apply(e: List[self.IR.Sym[Any]] => String, uses: List[self.IR.Sym[Any]]): LLExpr = LLExprStandalone(e, uses)
+
+    def fromSeq(xs: Seq[self.IR.Exp[Any]], sep: String = ", "): LLExpr =
+      fromSeq(xs, "{", sep, "}")
+
+    def fromSeq(xs: Seq[self.IR.Exp[Any]], start: String, sep: String, end: String): LLExpr =
+      fromSeqUnsafe(xs, start, sep, end)
+
+    def genericExprGen(arity: Int, components: List[Either[Int, String]]): List[self.IR.Sym[Any]] => List[String] =
+      (uses: List[self.IR.Sym[Any]]) => {
+        assert(arity == uses.length, s"arity mismatch: $arity != ${uses.length}")
+        components.map(_.left.map(i => quote(uses(i))).merge)
+      }
+
+    def fromSeqUnsafe(xs: Seq[Any], start: String, sep: String, end: String): LLExpr = {
+      val (arity, folded) = xs.foldLeft(0 -> List[Either[Int, String]]()) {
+        // for each referenced sym, add its index to the list
+        case ((n, acc), _: self.IR.Sym[_]) => n + 1 -> (acc :+ Left(n))
+        // quote all else
+        case ((n, acc), expr: self.IR.Exp[_]) => n -> (acc :+ Right(quote(expr)))
+        case ((n, acc), str: String) => n -> (acc :+ Right(str))
+        case _ => throw new IllegalArgumentException("unsupported type in LLExpr.fromSeq")
+        // :+ here is quadratic, but we don't expect xs to get very long
+        // and reversing separately is just so *ugly*...
+      }
+      LLExpr(genericExprGen(arity, folded).andThen(_.mkString(start, sep, end)), xs.flatMap(IR.syms).toList)
+    }
   }
 
-  case class LLExprStandalone(expr: String, uses: List[self.IR.Sym[Any]]) extends LLExpr
+  case class LLExprStandalone(exprGen: List[self.IR.Sym[Any]] => String, uses: List[self.IR.Sym[Any]]) extends LLExpr {
+    def expr(uses: List[self.IR.Sym[Any]]): String = exprGen(uses)
+  }
+
   case class LLFunctionHeader(args: List[String], uses: List[self.IR.Sym[Any]] = Nil) extends LLExpr {
-    override val expr: String = args.mkString("function(", ", ", ")")
+    override def expr(uses: List[self.IR.Sym[Any]]): String = {
+      assert(uses.isEmpty, "Function header cannot reference variables")
+      args.mkString("function(", ", ", ")")
+    }
   }
 
   sealed trait LLStmtImpl extends LLStmt {

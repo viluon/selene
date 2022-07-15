@@ -67,7 +67,7 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     emitBlock(body)
     val result = getBlockResult(body)
     if (!(result.tp <:< ManifestTyp(manifest[Unit]))) {
-      luaCode += LLReturn(LLExpr(quote(result), syms(result)))
+      luaCode += LLReturn(l"$result")
     }
     luaCode += LLEnd()
   }
@@ -102,7 +102,6 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     }).toMap
   }
 
-  def lowerExp(e: Exp[Any]): LLExpr = LLExpr(quote(e), syms(e))
-  def emitAssignment(lhs: Exp[Any], rhs: Exp[Any]): Unit = emitAssignment(lowerExp(lhs), lowerExp(rhs))
+  def emitAssignment(lhs: Exp[Any], rhs: Exp[Any]): Unit = emitAssignment(l"$lhs", l"$rhs")
   def emitAssignment(lhs: LLExpr, rhs: LLExpr): Unit = luaCode += LLAssign(lhs, rhs)
 }

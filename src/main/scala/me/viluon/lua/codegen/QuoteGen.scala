@@ -45,18 +45,22 @@ trait QuoteGen extends DummyGen { self: LLStmtOps =>
       ctx.checkLengths(args)
       val pi = ctx.parts.iterator
       val ai = args.iterator
-      val builder = new java.lang.StringBuilder(StringContext.treatEscapes(pi.next()))
+      val components = collection.mutable.ArrayBuffer[Either[Int, String]](Right(
+        StringContext.treatEscapes(pi.next())
+      ))
       val uses = collection.mutable.ArrayBuffer[IR.Sym[Any]]()
+      var arity = 0
       while (ai.hasNext) {
-        builder.append(ai.next() match {
-          case e: IR.Exp[_] =>
-            uses ++= IR.syms(e)
-            quote(e)
-          case a => a
+        components += (ai.next() match {
+          case sym: IR.Sym[_] =>
+            uses += sym
+            Left(try arity finally arity += 1)
+          case e: IR.Exp[_] => Right(quote(e))
+          case a => Right(a.toString)
         })
-        builder.append(StringContext.treatEscapes(pi.next()))
+        components += Right(StringContext.treatEscapes(pi.next()))
       }
-      LLExpr(builder.toString, uses.toSet.toList)
+      LLExpr(LLExpr.genericExprGen(arity, components.toList).andThen(_.mkString("")), uses.toSet.toList)
     }
   }
 }
