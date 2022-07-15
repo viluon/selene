@@ -5,7 +5,8 @@ import me.viluon.lua.LuaScalaExp
 /**
  * [[LuaCodegen]] combines codegen functionality for features of [[LuaScalaExp]].
  */
-trait LuaCodegen extends LuaEffectGen
+trait LuaCodegen extends LuaCoreCodegen
+  with LuaEffectGen
   with LuaNumericOpsGen
   with LuaPrimitiveOpsGen
   with LuaOrderingOpsGen
@@ -25,6 +26,7 @@ trait LuaCodegen extends LuaEffectGen
   with LuaModGen
   with LuaBooleanOpsGen
   with LuaMathGen
-  with LuaArrayBufferOpsGen {
+  with LuaArrayBufferOpsGen
+  with LuaSeqOpsGen {
   val IR: LuaScalaExp
 }

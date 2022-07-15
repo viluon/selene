@@ -2,7 +2,7 @@ package me.viluon.lua.codegen
 
 import scala.lms.common.BooleanOpsExp
 
-trait LuaBooleanOpsGen extends LuaBaseCodegen {
+trait LuaBooleanOpsGen extends LuaCoreCodegen {
   val IR: BooleanOpsExp
   import IR._
 

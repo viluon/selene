@@ -2,26 +2,26 @@ package me.viluon.lua.codegen
 
 import scala.lms.common.{BaseGenWhile, WhileExp}
 
-trait LuaWhileGen extends BaseGenWhile with LuaEffectGen with QuoteGen {
+trait LuaWhileGen extends LuaEffectGen with QuoteGen {
   val IR: WhileExp
 
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case While(Block(Const(c)), body) =>
-      stream.println(q"while $c do")
+      luaCode += LLWhile(LLExpr(c.toString, Nil))
       emitBlock(body)
-      stream.println("end")
+      luaCode += LLEnd()
     case While(cond, body) =>
-//      emitValDef(sym, q"${Const(())}")
-      val cond_fun = q"cond_$sym"
-      stream.println(s"local function $cond_fun()")
+      val cond_fun = fresh[Boolean]
+      luaCode += LLLocal(cond_fun, Some(LLFunctionHeader(Nil)))
       emitBlock(cond)
-      stream.println(q"return ${getBlockResult(cond)}")
-      stream.println("end")
-      stream.println(s"while $cond_fun() do")
+      luaCode += LLReturn(lowerExp(getBlockResult(cond)))
+      luaCode += LLEnd()
+
+      luaCode += LLWhile(LLExpr(q"$cond_fun()", syms(cond_fun)))
       emitBlock(body)
-      stream.println("end")
+      luaCode += LLEnd()
     case _ => super.emitNode(sym, rhs)
   }
 }

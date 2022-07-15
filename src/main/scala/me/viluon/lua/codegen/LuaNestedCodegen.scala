@@ -4,7 +4,7 @@ import scala.lms.common.EffectExp
 import scala.lms.internal.GenericNestedCodegen
 
 // FIXME copied verbatim from js.scala
-trait LuaNestedCodegen extends GenericNestedCodegen with LuaBaseCodegen with QuoteGen {
+trait LuaNestedCodegen extends DummyNestedCodegen with LuaCoreCodegen with QuoteGen {
   val IR: EffectExp
 
   import IR._
@@ -24,14 +24,14 @@ trait LuaNestedCodegen extends GenericNestedCodegen with LuaBaseCodegen with Quo
   }
 
   def emitForwardDef(sym: Sym[Any]): Unit = {
-    stream.println(q"local $sym")
+    luaCode += LLLocal(sym)
   }
 
   // special case for recursive vals
-  override def emitValDef(sym: Sym[Any], rhs: String): Unit = {
+  def emitValDef(sym: Sym[Any], rhs: Exp[Any]): Unit = {
     if (recursive contains sym)
-      stream.println(q"$sym = $rhs") // we have a forward declaration above.
+      emitAssignment(sym, rhs) // we have a forward declaration above.
     else
-      super.emitValDef(sym, rhs)
+      super.emitValDef(sym, LLExpr(quote(rhs), syms(rhs)))
   }
 }

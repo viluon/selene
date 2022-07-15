@@ -89,11 +89,12 @@ object Main {
         yOffset <- 0 until 3
       } {
         val (c, _, _) = decode(img(x + xOffset, y + yOffset))
-        if (buckets.toArray(implicitly)(c.toInt) == nil) {
+        if (buckets(c.toInt) == nil) {
           buckets.toArray(c.toInt) = 0
           // FIXME uniqueColours isn't marked as mutable
-          uniqueColours.toArray(uniqueColours.toArray.length + 1) = c
+          uniqueColours += c
         }
+        buckets.toArray(c.toInt) = buckets.toArray(implicitly)(c.toInt) + 1
         pixel.toArray(1 + xOffset + 2 * yOffset) = c
       }
 
@@ -135,14 +136,14 @@ object Main {
         val grey = encode(Colours.Grey, Colours.White, "x")
         val white = encode(Colours.White, Colours.Black, ".")
         render(
-//          shrink(
+          shrink(
             circle(
               solid(grey),
               solid(white),
               (x, y),
               3 * (math.sin(2 * os.clock()) + 1) + 3
             )
-//          )
+          )
         )
       }
     }

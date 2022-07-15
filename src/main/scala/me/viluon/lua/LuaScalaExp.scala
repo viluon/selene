@@ -70,7 +70,7 @@ abstract class LuaDSL[A: Manifest, B: Manifest] extends LuaScalaExp {
 
   lazy val code: String = {
     val source = new StringWriter()
-    codegen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
+    codegen.emitSource(Nil, codegen.reifyBlock(main(fresh[A](manifestTyp[A])))(manifestTyp))(manifestTyp[B])
     formatLua(source.toString)
   }
 }
@@ -78,7 +78,7 @@ abstract class LuaDSL[A: Manifest, B: Manifest] extends LuaScalaExp {
 abstract class Retargetable[A: Manifest, B: Manifest] extends LuaScalaExp with DslExp {
   self =>
   type SourceEmitter = {
-    def emitSource[T, R](f: Rep[T] => Rep[R], n: String, o: PrintWriter)(implicit ev1: Typ[T], ev2: Typ[R]): List[(Sym[Any], Any)]
+    def emitSource[T: Typ](args: List[Sym[_]], body: Block[T]): (Sym[Any], String, List[(Sym[Any], Any)])
   }
 
   def main(input: Rep[A]): Rep[B]
@@ -93,7 +93,8 @@ abstract class Retargetable[A: Manifest, B: Manifest] extends LuaScalaExp with D
 
   private def emit(gen: SourceEmitter): String = {
     val source = new StringWriter()
-    gen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
+//    gen.emitSource(main, "main", new PrintWriter(source))(manifestTyp[A], manifestTyp[B])
+    ???
     source.toString
   }
 

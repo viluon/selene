@@ -2,7 +2,7 @@ package me.viluon.lua.codegen
 
 import scala.lms.common.ObjectOpsExp
 
-trait LuaObjOpsGen extends LuaBaseCodegen {
+trait LuaObjOpsGen extends LuaCoreCodegen {
   val IR: ObjectOpsExp
   import IR._
 

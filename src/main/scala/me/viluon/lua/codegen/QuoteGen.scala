@@ -1,7 +1,5 @@
 package me.viluon.lua.codegen
 
-import scala.lms.internal.GenericCodegen
-
 /**
  * String interpolator aiming to simplify the implementation of code generators.
  * Basically, the following expression:
@@ -14,7 +12,7 @@ import scala.lms.internal.GenericCodegen
  * }}}
  * Provided `bar` is a `Rep[_]` and `bah` is not.
  */
-trait QuoteGen extends GenericCodegen {
+trait QuoteGen extends DummyGen {
 
   import language.implicitConversions
 

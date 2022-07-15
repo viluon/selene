@@ -2,7 +2,7 @@ package me.viluon.lua.codegen
 
 import scala.lms.common.{BaseGenFunctions, TupledFunctionsExp}
 
-trait LuaFunctionGen extends BaseGenFunctions with LuaEffectGen with QuoteGen {
+trait LuaFunctionGen extends LuaEffectGen with QuoteGen {
   val IR: TupledFunctionsExp
 
   import IR._

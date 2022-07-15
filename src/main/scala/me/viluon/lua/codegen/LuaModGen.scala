@@ -2,7 +2,7 @@ package me.viluon.lua.codegen
 
 import me.viluon.lua.ast.LuaModExp
 
-trait LuaModGen extends LuaBaseCodegen {
+trait LuaModGen extends LuaCoreCodegen {
   val IR: LuaModExp
   import IR._
 
