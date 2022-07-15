@@ -9,8 +9,6 @@ import scala.reflect.SourceContext
 trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   // TODO could we deprecate this in favour of LMS's UnboxedTuple?
   case class LuaUnboxedTuple[T: Typ](t: T)
-  // ignored by code generation
-  case class DummyUnboxedSymUse(sym: UnboxedSym[_]) extends Def[Unit]
 
   object LuaUnboxedTuple {
     def unapply[T <: Product](obj: Exp[LuaUnboxedTuple[T]])(implicit pos: SourceContext): Option[T] = obj match {
@@ -35,27 +33,7 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   }
 
   case class Unpack[T: Typ](x: Exp[Array[Any]]) extends Def[T]
-  class UnboxedSym[T: Typ](id: Int) extends Sym[T](id) with Product {
-    val components: Seq[Sym[Any]] = {
-      // T is a LuaUnboxedTuple, so its first (and only)
-      // type argument is the actual tuple this sym represents
-      val typ = implicitly[Typ[T]].typeArguments.head
-      // FIXME maybe it'd be better to move this check to fresh,
-      //       so that an unboxed sym isn't even constructed
-      //       in such a case
-      if (typ.typeArguments.isEmpty)
-        List(fresh(typ))
-      else typ.typeArguments.map {
-        t: Typ[_] => fresh(t)
-      }
-    }
-
-    // this ensures code that accesses only individual fields of the tuple
-    // isn't moved out of the scope of the unboxed definition
-    components.foreach {
-      sym => createDefinition(sym, DummyUnboxedSymUse(this))
-    }
-
+  class UnboxedSym[T: Typ](id: Int, val components: Seq[Sym[Any]]) extends Sym[T](id) with Product {
     override def withPos(pos: List[SourceContext]): Sym[T] = {
       components.foreach(_.withPos(pos))
       super.withPos(pos)
@@ -63,10 +41,8 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   }
 
   object UnboxedSym {
-    def unapply[T](obj: Any): Option[(Sym[T], Seq[Sym[Any]])] = obj match {
-      case _: UnboxedSym[T] =>
-        val sym = obj.asInstanceOf[UnboxedSym[T]]
-        Some((Sym(sym.id)(sym.tp), sym.components))
+    def unapply(sym: Sym[Any]): Option[(Int, Seq[Sym[Any]])] = sym match {
+      case s: UnboxedSym[_] => Some((s.id, s.components))
       case _ => None
     }
   }
@@ -74,11 +50,7 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   implicit def lutIsTyp[T: Typ]: Typ[LuaUnboxedTuple[T]] =
     simpleClassTyp(classOf[LuaUnboxedTuple[T]])
 
-  // TODO we should really produce a new UnboxedTuple[?]
-  //  with fresh Syms for each element. During quoting,
-  //  we just do .map(quote).mkString(", "). Getting the
-  //  Syms is just a matter of copy-pasting from
-  //  reflectEffectInternal.
+  // TODO
   //  The question remains what to do about next-stage
   //  expressions during unpacking, type-wise (note that
   //  queueEvent(unpack(x)) is correct, regardless of
@@ -87,9 +59,19 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
 
   override def fresh[T: Typ]: Sym[T] =
     if (implicitly[Typ[T]].runtimeClass == classOf[LuaUnboxedTuple[_]]) {
-      new UnboxedSym(
-        try nVars finally nVars += 1
-      )(implicitly[Typ[T]])
+      val typ = implicitly[Typ[T]].typeArguments.head
+      typ.typeArguments match {
+        // FIXME these first two may crash
+        case Nil => fresh(typ).asInstanceOf[Sym[T]]
+        case single :: Nil => fresh(single).asInstanceOf[Sym[T]]
+        case args =>
+          new UnboxedSym(
+            try nVars finally nVars += 1,
+            args.map {
+              t: Typ[_] => fresh(t)
+            }
+          )(implicitly[Typ[T]])
+      }
     } else super.fresh[T]
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {

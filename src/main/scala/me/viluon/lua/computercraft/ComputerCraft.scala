@@ -39,13 +39,6 @@ abstract class CCProgram extends LuaScalaExp with ComputerCraftExp {
     val body = ccGen.reifyBlock(main())
 
     val (entry, source, _) = ccGen.emitSource(Nil, body)
-    val sched = ccGen.getSchedule(Nil)(())
-    reifyEffects {
-      scala.Predef.println("schedule:\n" + sched.mkString("\n"))
-      scala.Predef.println("yep")
-      sched.foreach(ccGen.traverseStm)
-      nil
-    }
 
     import ccGen.stringContextToQuote
     q"""

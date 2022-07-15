@@ -77,24 +77,26 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     luaCode += LLLocal(entryPoint, Some(LLFunctionHeader(args.map(quote))))
     emitFunctionBody(body)
 
-    println(analyseLiveness.toList.sortBy(_._1.id).map(p => quote(p._1) -> p._2).mkString("\n"))
+    val liveness = analyseLiveness
+    println(liveness.toList.sortBy(_._1.id).map(p => quote(p._1) -> p._2).mkString("\n"))
+    println(s"liveness info gathered for ${liveness.size} out of $nVars variables")
 
     (entryPoint, luaCode.map(_.asLua).mkString("\n"), getFreeDataBlock(body))
   }
 
   private def analyseLiveness[A: Typ] = {
-    // liveness
-    def symsIn(stmt: LLStmt): Set[Sym[Any]] = stmt.asInstanceOf[Product].productIterator.collect {
-      case expr: LLExpr => expr.uses
-    }.flatten.toSet
-
-    val syms = luaCode.map(symsIn).toSet.flatten
+    def symsIn(xs: Iterable[Any]): Set[Sym[Any]] = xs.collect {
+      case expr: LLExpr => expr.uses.toSet
+      case it: Iterable[_] => it.map(Set(_)).flatMap(symsIn).toSet
+      case prod: Product => prod.productIterator.map(Set(_)).flatMap(symsIn).toSet
+    }.toSet.flatten
+    val syms = symsIn(luaCode)
     syms.map(sym => sym -> {
       val start = luaCode.zipWithIndex.find {
-        case (stmt, _) => symsIn(stmt).contains(sym)
+        case (stmt, _) => symsIn(List(stmt)).contains(sym)
       }.get._2
       val end = luaCode.zipWithIndex.reverse.find {
-        case (stmt, _) => symsIn(stmt).contains(sym)
+        case (stmt, _) => symsIn(List(stmt)).contains(sym)
       }.get._2
       start -> end
     }).toMap
