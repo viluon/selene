@@ -14,14 +14,14 @@ trait TermGen extends LuaEffectGen with QuoteGen {
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case GlobalTerm() => emitValDef(sym, "term")
-    case TermWrite(t) => emitValDef(sym, q"$t.write")
-    case TermSetCursorPos(t) => emitValDef(sym, q"$t.setCursorPos")
-    case TermSetTextColour(t) => emitValDef(sym, q"$t.setTextColour")
-    case TermSetBackgroundColour(t) => emitValDef(sym, q"$t.setBackgroundColour")
-    case TermGetSize(t) => emitValDef(sym, q"{ $t.getSize() }")
-    case TermClear(t) => emitValDef(sym, q"$t.clear")
-    case UnsafeCoerce(src) => emitValDef(sym, q"$src")
+    case GlobalTerm() => emitValDef(sym, l"term")
+    case TermWrite(t) => emitValDef(sym, l"$t.write")
+    case TermSetCursorPos(t) => emitValDef(sym, l"$t.setCursorPos")
+    case TermSetTextColour(t) => emitValDef(sym, l"$t.setTextColour")
+    case TermSetBackgroundColour(t) => emitValDef(sym, l"$t.setBackgroundColour")
+    case TermGetSize(t) => emitValDef(sym, l"{ $t.getSize() }")
+    case TermClear(t) => emitValDef(sym, l"$t.clear")
+    case UnsafeCoerce(src) => emitValDef(sym, l"$src")
     case _ => super.emitNode(sym, rhs)
   }
 }

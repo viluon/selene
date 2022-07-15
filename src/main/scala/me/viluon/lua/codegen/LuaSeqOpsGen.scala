@@ -7,7 +7,7 @@ trait LuaSeqOpsGen extends LuaEffectGen {
   import IR._
 
   override def emitNode(sym: IR.Sym[Any], rhs: IR.Def[Any]): Unit = rhs match {
-    case SeqApply(xs, i) => emitValDef(sym, q"$xs[$i]")
+    case SeqApply(xs, i) => emitValDef(sym, l"$xs[$i]")
     case _ => super.emitNode(sym, rhs)
   }
 }

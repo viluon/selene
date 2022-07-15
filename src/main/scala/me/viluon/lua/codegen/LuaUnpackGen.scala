@@ -15,7 +15,7 @@ trait LuaUnpackGen extends LuaCoreCodegen {
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case Unpack(x) => emitValDef(sym, q"unpack($x)")
+    case Unpack(x) => emitValDef(sym, l"unpack($x)")
     case DummyUnboxedSymUse(_) => ()
     case _ => super.emitNode(sym, rhs)
   }

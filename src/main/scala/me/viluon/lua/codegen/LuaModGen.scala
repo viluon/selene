@@ -7,7 +7,7 @@ trait LuaModGen extends LuaCoreCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case Mod(x, y) => emitValDef(sym, q"$x % $y")
+    case Mod(x, y) => emitValDef(sym, l"$x % $y")
     case _ => super.emitNode(sym, rhs)
   }
 }

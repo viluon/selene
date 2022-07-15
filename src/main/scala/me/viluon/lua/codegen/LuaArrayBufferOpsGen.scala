@@ -10,9 +10,10 @@ trait LuaArrayBufferOpsGen extends LuaCoreCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case ArrayBufferToArray(arr) => emitValDef(sym, q"$arr")
-    case ArrayBufferNew(xs) => emitValDef(sym, xs.map(quote).mkString("{", ", ", "}"))
-    case ArrayBufferAppend(arr, x) => emitAssignment(LLExpr(q"$arr[#$arr + 1]", syms(arr)), lowerExp(x))
+    case ArrayBufferToArray(arr) => emitValDef(sym, l"$arr")
+    case ArrayBufferNew(xs) =>
+      emitValDef(sym, LLExpr(xs.map(quote).mkString("{", ", ", "}"), xs.flatMap(syms).toList))
+    case ArrayBufferAppend(arr, x) => emitAssignment(l"$arr[#$arr + 1]", lowerExp(x))
     case _ => super.emitNode(sym, rhs)
   }
 }

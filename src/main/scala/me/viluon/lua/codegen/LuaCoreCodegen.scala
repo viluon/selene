@@ -16,8 +16,9 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     else LLLocal(sym, Some(rhs))
   }
 
-  @deprecated("pass an LLExpr instead")
-  def emitValDef(sym: Sym[Any], rhs: String): Unit = emitValDef(sym, LLExpr(rhs, Nil))
+  @deprecated("Pass a LLExpr instead", "from now till the end of times")
+  def emitValDef(ignore: Sym[Any], ignore2: String): Unit =
+    throw new IllegalArgumentException("beware implicit conversions in codegen")
 
   def originalContext(x: SourceContext): SourceContext =
     x.parent.filter(_.parent.nonEmpty).map(originalContext).getOrElse(x)

@@ -8,10 +8,10 @@ trait LuaNumericOpsGen extends LuaPrimitiveOpsGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case NumericPlus(a, b) => emitValDef(sym, q"$a + $b")
-    case NumericMinus(a, b) => emitValDef(sym, q"$a - $b")
-    case NumericTimes(a, b) => emitValDef(sym, q"$a * $b")
-    case NumericDivide(a, b) => emitValDef(sym, q"$a / $b")
+    case NumericPlus(a, b) => emitValDef(sym, l"$a + $b")
+    case NumericMinus(a, b) => emitValDef(sym, l"$a - $b")
+    case NumericTimes(a, b) => emitValDef(sym, l"$a * $b")
+    case NumericDivide(a, b) => emitValDef(sym, l"$a / $b")
     case _ => super.emitNode(sym, rhs)
   }
 }

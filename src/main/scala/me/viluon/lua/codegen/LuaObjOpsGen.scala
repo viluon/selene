@@ -7,7 +7,7 @@ trait LuaObjOpsGen extends LuaCoreCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case ObjectToString(obj) => emitValDef(sym, q"tostring($obj)")
+    case ObjectToString(obj) => emitValDef(sym, l"tostring($obj)")
     case _ => super.emitNode(sym, rhs)
   }
 }

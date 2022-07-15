@@ -7,9 +7,9 @@ trait LuaMathGen extends LuaCoreCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case GlobalMath() => emitValDef(sym, "math")
-    case MathSin(math) => emitValDef(sym, q"$math.sin")
-    case LuaPow(base, exp) => emitValDef(sym, q"$base ^ $exp")
+    case GlobalMath() => emitValDef(sym, l"math")
+    case MathSin(math) => emitValDef(sym, l"$math.sin")
+    case LuaPow(base, exp) => emitValDef(sym, l"$base ^ $exp")
     case _ => super.emitNode(sym, rhs)
   }
 }

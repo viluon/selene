@@ -7,9 +7,9 @@ trait LuaStringGen extends LuaCoreCodegen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case GlobalString() => emitValDef(sym, "string")
-    case StringChar(string) => emitValDef(sym, q"$string.char")
-    case StringByte(string) => emitValDef(sym, q"$string.byte")
+    case GlobalString() => emitValDef(sym, l"string")
+    case StringChar(string) => emitValDef(sym, l"$string.char")
+    case StringByte(string) => emitValDef(sym, l"$string.byte")
     case _ => super.emitNode(sym, rhs)
   }
 }

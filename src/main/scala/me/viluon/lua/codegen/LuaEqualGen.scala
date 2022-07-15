@@ -8,8 +8,8 @@ trait LuaEqualGen extends BaseGen with QuoteGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case Equal(a, b) => emitValDef(sym, q"$a == $b")
-    case NotEqual(a, b) => emitValDef(sym, q"$a ~= $b")
+    case Equal(a, b) => emitValDef(sym, l"$a == $b")
+    case NotEqual(a, b) => emitValDef(sym, l"$a ~= $b")
     case _ => super.emitNode(sym, rhs)
   }
 }

@@ -8,9 +8,9 @@ trait LuaMiscOpsGen extends BaseGen with QuoteGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case PrintLn(s) => emitValDef(sym, q"print($s)")
-    case Print(s) => emitValDef(sym, q"io.write($s)")
-    case Error(s) => emitValDef(sym, q"error($s)")
+    case PrintLn(s) => emitValDef(sym, l"print($s)")
+    case Print(s) => emitValDef(sym, l"io.write($s)")
+    case Error(s) => emitValDef(sym, l"error($s)")
     case _ => super.emitNode(sym, rhs)
   }
 }

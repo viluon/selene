@@ -13,10 +13,15 @@ trait LuaStructGen extends BaseGen with QuoteGen {
   }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case Struct(_tag, fields) => emitValDef(sym, "{\n" + fields.map({
-      case (name, value) => q"\t${accessString(name, "")} = $value;\n"
-    }) + "}")
-    case FieldApply(struct, index) => emitValDef(sym, q"$struct${accessString(index)}")
+    case Struct(_tag, fields) =>
+      val str = "{\n" + fields.map({
+        case (name, value) => q"\t${accessString(name, "")} = $value;\n"
+      }) + "}"
+      val uses = fields.map(_._2).flatMap(syms).toList
+      emitValDef(sym, LLExpr(str, uses))
+    case FieldApply(struct, index) =>
+      val uses = syms(struct) ++ syms(index)
+      emitValDef(sym, LLExpr(q"$struct${accessString(index)}", uses))
     case _ => super.emitNode(sym, rhs)
   }
 }

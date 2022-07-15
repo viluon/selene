@@ -8,11 +8,11 @@ trait LuaOrderingOpsGen extends BaseGen with QuoteGen {
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case OrderingGT(lhs, rhs) => emitValDef(sym, q"$lhs > $rhs")
-    case OrderingLT(lhs, rhs) => emitValDef(sym, q"$lhs < $rhs")
-    case OrderingGTEQ(lhs, rhs) => emitValDef(sym, q"$lhs >= $rhs")
-    case OrderingLTEQ(lhs, rhs) => emitValDef(sym, q"$lhs <= $rhs")
-    case OrderingEquiv(lhs, rhs) => emitValDef(sym, q"$lhs == $rhs")
+    case OrderingGT(lhs, rhs) => emitValDef(sym, l"$lhs > $rhs")
+    case OrderingLT(lhs, rhs) => emitValDef(sym, l"$lhs < $rhs")
+    case OrderingGTEQ(lhs, rhs) => emitValDef(sym, l"$lhs >= $rhs")
+    case OrderingLTEQ(lhs, rhs) => emitValDef(sym, l"$lhs <= $rhs")
+    case OrderingEquiv(lhs, rhs) => emitValDef(sym, l"$lhs == $rhs")
     case _ => super.emitNode(sym, rhs)
   }
 }
