@@ -33,7 +33,12 @@ trait LLStmtOps { self: QuoteGen =>
     def fromSeqUnsafe(xs: Seq[Any], start: String, sep: String, end: String): LLExpr = {
       val (arity, folded) = xs.foldLeft(0 -> List[Either[Int, String]]()) {
         // for each referenced sym, add its index to the list
-        case ((n, acc), _: self.IR.Sym[_]) => n + 1 -> (acc :+ Left(n))
+        case ((n, acc), expr: self.IR.Exp[_]) if IR.syms(expr).nonEmpty =>
+          // TODO more than one ref?
+          if (IR.syms(expr).length > 1) {
+            throw new IllegalArgumentException(s"cannot handle multiple refs in $expr")
+          }
+          n + 1 -> (acc :+ Left(n))
         // quote all else
         case ((n, acc), expr: self.IR.Exp[_]) => n -> (acc :+ Right(quote(expr)))
         case ((n, acc), str: String) => n -> (acc :+ Right(str))

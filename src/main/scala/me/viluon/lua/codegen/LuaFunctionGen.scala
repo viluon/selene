@@ -15,7 +15,10 @@ trait LuaFunctionGen extends LuaEffectGen with QuoteGen {
       emitValDef(sym, l"function($arg)")
       emitFunctionBody(body)
     case Apply(fun, UnboxedTuple(args)) =>
-      emitValDef(sym, LLExpr.fromSeqUnsafe(fun :: "(" :: args, "" , ", ", ")"))
+      val commaSeparated =
+        args.flatMap(arg => arg :: ", " :: Nil)
+          .inits.drop(1).toList.headOption.toList.flatten
+      emitValDef(sym, LLExpr.fromSeqUnsafe(fun :: "(" :: commaSeparated, "" , "", ")"))
     case Apply(fun, arg) =>
       emitValDef(sym, l"$fun($arg)")
     case _ => super.emitNode(sym, rhs)

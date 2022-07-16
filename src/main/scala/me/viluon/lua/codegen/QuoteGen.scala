@@ -16,6 +16,7 @@ import scala.lms.internal.Expressions
  * }}}
  * Provided `bar` is a `Rep[_]` and `bah` is not.
  */
+// TODO get rid of the circular dependency between these traits
 trait QuoteGen extends DummyGen { self: LLStmtOps =>
 
   import language.implicitConversions
@@ -43,24 +44,13 @@ trait QuoteGen extends DummyGen { self: LLStmtOps =>
 
     override def l(args: Any*): LLExpr = {
       ctx.checkLengths(args)
-      val pi = ctx.parts.iterator
-      val ai = args.iterator
-      val components = collection.mutable.ArrayBuffer[Either[Int, String]](Right(
-        StringContext.treatEscapes(pi.next())
-      ))
-      val uses = collection.mutable.ArrayBuffer[IR.Sym[Any]]()
-      var arity = 0
-      while (ai.hasNext) {
-        components += (ai.next() match {
-          case sym: IR.Sym[_] =>
-            uses += sym
-            Left(try arity finally arity += 1)
-          case e: IR.Exp[_] => Right(quote(e))
-          case a => Right(a.toString)
-        })
-        components += Right(StringContext.treatEscapes(pi.next()))
-      }
-      LLExpr(LLExpr.genericExprGen(arity, components.toList).andThen(_.mkString("")), uses.toSet.toList)
+
+      LLExpr.fromSeqUnsafe(
+        ctx.parts.map(StringContext.treatEscapes).zip(args :+ "").flatMap(p => p._1 :: p._2 :: Nil),
+        "",
+        "",
+        ""
+      )
     }
   }
 }
