@@ -16,7 +16,7 @@ trait LLStmtOps { self: QuoteGen =>
 
     def substituted(allocation: Map[self.IR.Sym[Any], self.IR.Sym[Any]]): LLExpr = this match {
       case LLExprStandalone(exprGen, uses) => LLExprStandalone(exprGen, uses.map(allocation))
-      case LLFunctionHeader(args, uses) => LLFunctionHeader(args, uses.map(allocation))
+      case LLFunctionHeader(args, bodyLen, uses) => LLFunctionHeader(args, bodyLen, uses.map(allocation))
     }
   }
 
@@ -60,7 +60,7 @@ trait LLStmtOps { self: QuoteGen =>
     def expr(uses: List[self.IR.Sym[Any]]): String = exprGen(uses)
   }
 
-  case class LLFunctionHeader(args: List[String], uses: List[self.IR.Sym[Any]] = Nil) extends LLExpr {
+  case class LLFunctionHeader(args: List[String], bodyLen: Int, uses: List[self.IR.Sym[Any]] = Nil) extends LLExpr {
     override def expr(uses: List[self.IR.Sym[Any]]): String = {
       assert(uses.isEmpty, "Function header cannot reference variables")
       args.mkString("function(", ", ", ")")
@@ -71,7 +71,7 @@ trait LLStmtOps { self: QuoteGen =>
     def asLua: String = this match {
       case LLAssign(LLExpr(lhs, _), LLExpr(rhs, _)) => q"$lhs = $rhs"
       case LLReturn(LLExpr(expr, _)) => q"return $expr"
-      case LLWhile(LLExpr(cond, _)) => q"while $cond do"
+      case LLWhile(LLExpr(cond, _), _) => q"while $cond do"
       case LLIf(LLExpr(cond, _)) => q"if $cond then"
       case LLEnd() => "end"
       case LLElse() => "else"
@@ -84,7 +84,7 @@ trait LLStmtOps { self: QuoteGen =>
   def substituted(stmt: LLStmt, allocation: Map[self.IR.Sym[Any], self.IR.Sym[Any]]): LLStmt = stmt match {
     case LLAssign(lhs, rhs) => LLAssign(lhs.substituted(allocation), rhs.substituted(allocation))
     case LLReturn(expr) => LLReturn(expr.substituted(allocation))
-    case LLWhile(cond) => LLWhile(cond.substituted(allocation))
+    case LLWhile(cond, bodyLen) => LLWhile(cond.substituted(allocation), bodyLen)
     case LLIf(cond) => LLIf(cond.substituted(allocation))
     case LLEnd() => LLEnd()
     case LLElse() => LLElse()
@@ -94,7 +94,7 @@ trait LLStmtOps { self: QuoteGen =>
 
   case class LLAssign(lhs: LLExpr, rhs: LLExpr) extends LLStmtImpl
   case class LLReturn(expr: LLExpr) extends LLStmtImpl
-  case class LLWhile(cond: LLExpr) extends LLStmtImpl
+  case class LLWhile(cond: LLExpr, bodyLen: Int) extends LLStmtImpl
   case class LLIf(cond: LLExpr) extends LLStmtImpl
   case class LLEnd() extends LLStmtImpl
   case class LLElse() extends LLStmtImpl

@@ -103,7 +103,7 @@ object Main {
           uniqueColours.toArray(implicitly)(1)
         else Colours.Red
 
-      encode(bg, Colours.White, " ")
+      encode(bg, Colours.White, ".")
     }
 
     def render(img: Image): Rep[Unit] = {

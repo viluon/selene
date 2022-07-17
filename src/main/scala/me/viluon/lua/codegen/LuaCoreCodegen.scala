@@ -1,5 +1,6 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.LuaUtils
 import me.viluon.lua.codegen.lowLevel.{LLStmt, LLStmtOps}
 
 import scala.collection.mutable.ArrayBuffer
@@ -57,10 +58,13 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     case _ => super.quote(x)
   }
 
-  override def emitBlock(y: Block[Any]): Unit = {
-    //    stream.println("do -- emitBlock - is this correct?")
-    super.emitBlock(y)
-    //    stream.println("end")
+  def inScope(body: => Unit): ArrayBuffer[LLStmt] = {
+    val oldCode = luaCode
+    luaCode = new ArrayBuffer[LLStmt]
+    body
+    val newCode = luaCode
+    luaCode = oldCode
+    newCode
   }
 
   def emitFunctionBody(body: Block[Any]): Unit = {
@@ -99,13 +103,17 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
 
   def emitSource[A: Typ](args: List[IR.Sym[_]], body: Block[A]): (Sym[Any], String, List[(IR.Sym[Any], Any)]) = {
     val entryPoint = fresh // TODO should be named main
-    luaCode += LLLocal(entryPoint, Some(LLFunctionHeader(args.map(quote))))
-    emitFunctionBody(body)
+    val mainBody = inScope(emitFunctionBody(body))
+    luaCode += LLLocal(entryPoint, Some(LLFunctionHeader(args.map(quote), mainBody.size)))
+    luaCode ++= mainBody
     luaCode += LLStandalone(l"$entryPoint()")
 
     val liveness = analyseLiveness
     println(liveness.toList.sortBy(_._1.id).map(p => quote(p._1) -> p._2).mkString("\n"))
     println(s"liveness info gathered for ${liveness.size} out of $nVars variables")
+
+    println("\nbefore register allocation:")
+    println(LuaUtils.formatLua(luaCode.map(_.asLua).mkString("\n")))
 
     val (allocation, code) = allocRegisters(liveness, luaCode)
     val usedRegs = allocation.values.toSet
@@ -129,9 +137,9 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
       case prod: Product => prod.productIterator.map(Set(_)).flatMap(symsIn).toSet
     }.toSet.flatten
 
-    // TODO a sym with a use edge crossing a loop or function boundary
-    //  needs to have its range extended to the end of the loop or function
-    //  (actually, for functions it's even worse as upvalues can escape via closures!)
+    def sliceReferences(start: Int, end: Int, sym: IR.Sym[Any]) = {
+      luaCode.slice(start, end).flatMap(x => symsIn(Set(x))).toSet.contains(sym)
+    }
 
     symsIn(luaCode).map(sym => sym -> {
       val start = luaCode.zipWithIndex.find {
@@ -140,7 +148,22 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
       val end = luaCode.zipWithIndex.reverse.find {
         case (stmt, _) => symsIn(List(stmt)).contains(sym)
       }.get._2
-      start -> end
+
+      // check to see if there's a reference in an open loop or function
+      val loopEnds = luaCode.zipWithIndex.filter {
+        case (_, i) => i >= start && i <= end
+      }.collect {
+        case (LLWhile(_, bodyLen), i)
+          if i + bodyLen > end && sliceReferences(i, i + bodyLen, sym)
+        => bodyLen + i
+        case (LLLocal(_, Some(LLFunctionHeader(_, bodyLen, _))), i)
+          if sliceReferences(i, i + bodyLen, sym)
+        => luaCode.size // FIXME this is a hack, but it works for now
+                        //  upvalues are considered live forever
+      }
+
+      val loopEnd: Option[Int] = if (loopEnds.isEmpty) None else Some(loopEnds.max)
+      start -> loopEnd.map(_ max end).getOrElse(end)
     }).toMap
   }
 
