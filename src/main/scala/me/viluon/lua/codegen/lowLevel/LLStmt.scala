@@ -2,6 +2,7 @@ package me.viluon.lua.codegen.lowLevel
 
 import me.viluon.lua.codegen.QuoteGen
 
+import scala.collection.mutable
 import scala.lms.internal.{Effects, Expressions}
 
 sealed trait LLStmt {
@@ -12,6 +13,11 @@ trait LLStmtOps { self: QuoteGen =>
   sealed trait LLExpr {
     def expr(uses: List[self.IR.Sym[Any]]): String
     val uses: List[self.IR.Sym[Any]]
+
+    def substituted(allocation: Map[self.IR.Sym[Any], self.IR.Sym[Any]]): LLExpr = this match {
+      case LLExprStandalone(exprGen, uses) => LLExprStandalone(exprGen, uses.map(allocation))
+      case LLFunctionHeader(args, uses) => LLFunctionHeader(args, uses.map(allocation))
+    }
   }
 
   object LLExpr {
@@ -73,6 +79,17 @@ trait LLStmtOps { self: QuoteGen =>
       case LLLocal(sym, None) => q"local $sym"
       case LLLocal(sym, Some(LLExpr(expr, _))) => q"local $sym = $expr"
     }
+  }
+
+  def substituted(stmt: LLStmt, allocation: Map[self.IR.Sym[Any], self.IR.Sym[Any]]): LLStmt = stmt match {
+    case LLAssign(lhs, rhs) => LLAssign(lhs.substituted(allocation), rhs.substituted(allocation))
+    case LLReturn(expr) => LLReturn(expr.substituted(allocation))
+    case LLWhile(cond) => LLWhile(cond.substituted(allocation))
+    case LLIf(cond) => LLIf(cond.substituted(allocation))
+    case LLEnd() => LLEnd()
+    case LLElse() => LLElse()
+    case LLStandalone(expr) => LLStandalone(expr.substituted(allocation))
+    case LLLocal(sym, expr) => LLLocal(allocation(sym), expr.map(_.substituted(allocation)))
   }
 
   case class LLAssign(lhs: LLExpr, rhs: LLExpr) extends LLStmtImpl

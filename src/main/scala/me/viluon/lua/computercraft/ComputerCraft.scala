@@ -38,13 +38,9 @@ abstract class CCProgram extends LuaScalaExp with ComputerCraftExp {
   private def compile(): String = {
     val body = ccGen.reifyBlock(main())
 
-    val (entry, source, _) = ccGen.emitSource(Nil, body)
+    val (_, source, _) = ccGen.emitSource(Nil, body)
 
-    import ccGen.stringContextToQuote
-    q"""
-       |$source
-       |$entry()
-       |""".stripMargin
+    source
   }
 
   private def emit(gen: SourceEmitter): String = {

@@ -10,6 +10,8 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   // TODO could we deprecate this in favour of LMS's UnboxedTuple?
   case class LuaUnboxedTuple[T: Typ](t: T)
 
+  case class DummyRead[A]() extends Def[A]
+
   object LuaUnboxedTuple {
     def unapply[T <: Product](obj: Exp[LuaUnboxedTuple[T]])(implicit pos: SourceContext): Option[T] = obj match {
       case UnboxedSym(_, xs) => Some(((xs.map(sym => sym.withPos(pos :: sym.pos)) match {
@@ -33,7 +35,7 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   }
 
   case class Unpack[T: Typ](x: Exp[Array[Any]]) extends Def[T]
-  class UnboxedSym[T: Typ](id: Int, val components: Seq[Sym[Any]]) extends Sym[T](id) with Product {
+  class UnboxedSym[T: Typ](id: Int, var components: Seq[Sym[Any]]) extends Sym[T](id) with Product {
     override def withPos(pos: List[SourceContext]): Sym[T] = {
       components.foreach(_.withPos(pos))
       super.withPos(pos)
@@ -65,17 +67,26 @@ trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
         case Nil => fresh(typ).asInstanceOf[Sym[T]]
         case single :: Nil => fresh(single).asInstanceOf[Sym[T]]
         case args =>
-          new UnboxedSym(
-            try nVars finally nVars += 1,
-            args.map {
-              t: Typ[_] => fresh(t)
-            }
+          val unboxedSym = new UnboxedSym(
+            try nVars finally nVars += 1, Nil
           )(implicitly[Typ[T]])
+          unboxedSym.components = args.map {
+            t: Typ[_] =>
+              // make the unboxed tuple components all read the unboxed sym
+              createReflectDefinition(fresh(t), Reflect(
+                DummyRead(), Read(List(unboxedSym)), List(unboxedSym)
+              ))
+          }
+          unboxedSym
       }
     } else super.fresh[T]
 
   override def boundSyms(e: Any): List[Sym[Any]] = e match {
     case Unpack(x) => boundSyms(x)
+    case tup: LuaUnboxedTuple[_] => tup.t.asInstanceOf[Product].productIterator.toList.map {
+      case s: Sym[_] => s
+      case x => throw new IllegalArgumentException(s"unexpected $x in LuaUnboxedTuple")
+    }
     case _ => super.boundSyms(e)
   }
 
