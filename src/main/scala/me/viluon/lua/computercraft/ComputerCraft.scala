@@ -7,10 +7,6 @@ import me.viluon.lua.computercraft.gen.{OsGen, TermGen}
 import me.viluon.lua.computercraft.lang.{Os, Term}
 import me.viluon.lua.{LuaScala, LuaScalaExp}
 
-import java.io.{PrintWriter, StringWriter}
-import scala.language.reflectiveCalls
-import scala.lms.common.LivenessOpt
-import scala.lms.internal.{Effects, Expressions, NestedBlockTraversal}
 import scala.reflect.SourceContext
 
 trait ComputerCraft extends LuaScala with Term with Os
@@ -19,38 +15,24 @@ trait CCCodegen extends LuaCodegen with TermGen with OsGen {
   val IR: ComputerCraftExp
 }
 
-abstract class CCProgram extends LuaScalaExp with ComputerCraftExp {
-  self =>
-  type SourceEmitter = {
-    def emitSource[T, R](f: Rep[T] => Rep[R], n: String, o: PrintWriter)(implicit ev1: Typ[T], ev2: Typ[R]): List[(Sym[Any], Any)]
-  }
-
+trait CCLibrary extends LuaScalaExp with ComputerCraftExp { self =>
   val nil: Rep[Unit] = unit(())
-
-  implicit val initialCtx = SourceContext("main", Nil)
-
-  def main(): Rep[Unit]
-
   val ccGen = new CCCodegen {
     override val IR: self.type = self
   }
+}
 
-  private def compile(): String = {
+abstract class CCProgram extends CCLibrary {
+  implicit val initialCtx: SourceContext = SourceContext("main", Nil)
+
+  def main(): Rep[Unit]
+
+  lazy val compiled: (String, String) = compile()
+  def lua: String = formatLua(compiled._2)
+
+  private def compile(): (String, String) = {
     val body = ccGen.reifyBlock(main())
-
-    val (_, source, _) = ccGen.emitSource(Nil, body)
-
-    source
+    val (_, unalloc, source, _) = ccGen.emitSource(Nil, body)
+    unalloc -> source
   }
-
-  private def emit(gen: SourceEmitter): String = {
-    val source = new StringWriter()
-    gen.emitSource({ignore: Rep[Unit] => main()}, "main", new PrintWriter(source))
-    s"""
-       |${source.toString}
-       |main()
-       |""".stripMargin
-  }
-
-  lazy val lua: String = formatLua(compile())
 }

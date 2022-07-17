@@ -101,7 +101,7 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     allocation.toMap -> code.toList
   }
 
-  def emitSource[A: Typ](args: List[IR.Sym[_]], body: Block[A]): (Sym[Any], String, List[(IR.Sym[Any], Any)]) = {
+  def emitSource[A: Typ](args: List[IR.Sym[_]], body: Block[A]): (Sym[Any], String, String, List[(IR.Sym[Any], Any)]) = {
     val entryPoint = fresh // TODO should be named main
     val mainBody = inScope(emitFunctionBody(body))
     luaCode += LLLocal(entryPoint, Some(LLFunctionHeader(args.map(quote), mainBody.size)))
@@ -113,7 +113,8 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
     println(s"liveness info gathered for ${liveness.size} out of $nVars variables")
 
     println("\nbefore register allocation:")
-    println(LuaUtils.formatLua(luaCode.map(_.asLua).mkString("\n")))
+    val unallocated = LuaUtils.formatLua(luaCode.map(_.asLua).mkString("\n"))
+    println(unallocated)
 
     val (allocation, code) = allocRegisters(liveness, luaCode)
     val usedRegs = allocation.values.toSet
@@ -126,7 +127,8 @@ trait LuaCoreCodegen extends DummyGen with QuoteGen with LLStmtOps {
       case _ => true
     }
 
-    (entryPoint, withDeclarations.map(_.asLua).mkString("\n"), getFreeDataBlock(body))
+    val finalCode = withDeclarations.map(_.asLua).mkString("\n")
+    (entryPoint, unallocated, finalCode, getFreeDataBlock(body))
   }
 
   private def analyseLiveness[A: Typ] = {

@@ -24,7 +24,6 @@ trait LuaScalaExp extends LuaScala
   with LuaTupledFunctionsExp
   with TupledFunctionsRecursiveExp
   with TupleOpsExp
-  with StructExpOpt
   with StructExpOptCommon
   with ObjectOpsExpOpt
   with VariablesExpOpt
@@ -98,6 +97,6 @@ abstract class Retargetable[A: Manifest, B: Manifest] extends LuaScalaExp with D
     source.toString
   }
 
-  lazy val lua: String = formatLua(emit(luaGen))
+  lazy val lua: String = formatLua(???)
   lazy val scala: String = emit(scalaGen.asInstanceOf[SourceEmitter])
 }

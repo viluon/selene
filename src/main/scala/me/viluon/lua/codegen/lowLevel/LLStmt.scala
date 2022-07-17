@@ -2,9 +2,6 @@ package me.viluon.lua.codegen.lowLevel
 
 import me.viluon.lua.codegen.QuoteGen
 
-import scala.collection.mutable
-import scala.lms.internal.{Effects, Expressions}
-
 sealed trait LLStmt {
   def asLua: String
 }
