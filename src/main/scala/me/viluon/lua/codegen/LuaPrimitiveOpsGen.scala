@@ -7,34 +7,33 @@ trait LuaPrimitiveOpsGen extends BaseGen with QuoteGen {
 
   import IR._
 
-  // FIXME: not all primitive types are supported by Lua (e.g. integers aren't)
-  // FIXME: untranslated JS
+  // FIXME: not all primitive types are supported by Lua (e.g. integers aren't in 5.1)
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
-    case ObjDoubleParseDouble(s) => emitValDef(sym, l"parseFloat($s)")
-    case ObjDoublePositiveInfinity() => emitValDef(sym, l"Infinity")
-    case ObjDoubleNegativeInfinity() => emitValDef(sym, l"-Infinity")
-    case ObjDoubleMinValue() => emitValDef(sym, l"Number.MIN_VALUE")
-    case ObjDoubleMaxValue() => emitValDef(sym, l"Number.MAX_VALUE")
+    case ObjDoubleParseDouble(s) => ???
+    case ObjDoublePositiveInfinity() => ???
+    case ObjDoubleNegativeInfinity() => ???
+    case ObjDoubleMinValue() => ???
+    case ObjDoubleMaxValue() => ???
     case DoubleFloatValue(lhs) => emitValDef(sym, l"$lhs")
-    case ObjIntegerParseInt(s) => emitValDef(sym, l"parseInt($s, 10)")
-    case ObjIntMaxValue() => emitValDef(sym, l"Number.MAX_VALUE")
-    case ObjIntMinValue() => emitValDef(sym, l"Number.MIN_VALUE")
-    case IntDivide(lhs, rhs) => emitValDef(sym, l"math.floor($lhs / $rhs)")
+    case ObjIntegerParseInt(s) => ???
+    case ObjIntMaxValue() => ???
+    case ObjIntMinValue() => ???
+    case IntDivide(lhs, rhs) => ???
     case IntMod(lhs, rhs) => emitValDef(sym, l"$lhs % $rhs")
-    case IntBinaryOr(lhs, rhs) => emitValDef(sym, l"$lhs | $rhs")
-    case IntBinaryAnd(lhs, rhs) => emitValDef(sym, l"$lhs & $rhs")
-    case IntBinaryXor(lhs, rhs) => emitValDef(sym, l"$lhs ^ $rhs")
+    case IntBinaryOr(lhs, rhs) => ???
+    case IntBinaryAnd(lhs, rhs) => ???
+    case IntBinaryXor(lhs, rhs) => ???
     case IntDoubleValue(lhs) => emitValDef(sym, l"$lhs")
     case IntFloatValue(lhs) => emitValDef(sym, l"$lhs")
-    case IntBitwiseNot(lhs) => emitValDef(sym, l"~$lhs")
+    case IntBitwiseNot(lhs) => ???
     case IntToLong(lhs) => emitValDef(sym, l"$lhs")
     case IntToFloat(lhs) => emitValDef(sym, l"$lhs")
     case IntToDouble(lhs) => emitValDef(sym, l"$lhs")
     case FloatToDouble(lhs) => emitValDef(sym, l"$lhs")
-    case LongBinaryOr(lhs, rhs) => emitValDef(sym, l"$lhs | $rhs")
-    case LongBinaryAnd(lhs, rhs) => emitValDef(sym, l"$lhs & $rhs")
-    case LongShiftLeft(lhs, rhs) => emitValDef(sym, l"$lhs << $rhs")
-    case LongShiftRightUnsigned(lhs, rhs) => emitValDef(sym, l"$lhs >>> $rhs")
+    case LongBinaryOr(lhs, rhs) => ???
+    case LongBinaryAnd(lhs, rhs) => ???
+    case LongShiftLeft(lhs, rhs) => ???
+    case LongShiftRightUnsigned(lhs, rhs) => ???
     case LongToInt(lhs) => emitValDef(sym, l"$lhs")
     case IntPlus(lhs, rhs) => emitValDef(sym, l"$lhs + $rhs")
     case IntTimes(lhs, rhs) => emitValDef(sym, l"$lhs * $rhs")

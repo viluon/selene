@@ -16,7 +16,7 @@ trait TermExp extends Term with LuaScalaExp with LuaFunctionUtils {
     def setTextColour(c: Exp[Colour])(implicit pos: SourceContext): Exp[Unit] = termLike_setTextColour(pos)(t)(c.toCC)
     def setBackgroundColour(c: Exp[Colour])(implicit pos: SourceContext): Exp[Unit] = termLike_setBackgroundColour(pos)(t)(c.toCC)
     def clear()(implicit pos: SourceContext): Exp[Unit] = termLike_clear(pos)(t)(())
-    def getSize()(implicit pos: SourceContext): Exp[Array[Int]] = termLike_getSize(pos)(t)
+    def getSize()(implicit pos: SourceContext): LuaUnboxedTuple[(Exp[Int], Exp[Int])] = termLike_getSize(pos)(t)(())
   }
 
   implicit class ColourOps(c: Exp[Colour]) {
@@ -48,7 +48,7 @@ trait TermExp extends Term with LuaScalaExp with LuaFunctionUtils {
   case class TermSetTextColour(t: Exp[TermLike]) extends Def[Int => Unit]
   case class TermSetBackgroundColour(t: Exp[TermLike]) extends Def[Int => Unit]
   case class TermClear(t: Exp[TermLike]) extends Def[Unit => Unit]
-  case class TermGetSize(t: Exp[TermLike]) extends Def[Array[Int]]
+  case class TermGetSize(t: Exp[TermLike]) extends Def[Unit => LuaUnboxedTuple[(Int, Int)]]
 
   case class ColourToInt(c: Exp[Colour]) extends Exp[Int]
 
@@ -67,6 +67,11 @@ trait TermExp extends Term with LuaScalaExp with LuaFunctionUtils {
     t => impureFun(TermSetBackgroundColour(t))
   override def termLike_clear(implicit pos: SourceContext): Exp[TermLike] => Exp[Unit] => Exp[Unit] =
     t => impureFun(TermClear(t))
-  override def termLike_getSize(implicit pos: SourceContext): Exp[TermLike] => Exp[Array[Int]] =
-    t => reflectEffect(TermGetSize(t))
+  override def termLike_getSize(implicit pos: SourceContext): Exp[TermLike] => Exp[Unit] => LuaUnboxedTuple[(Exp[Int], Exp[Int])] =
+    t => _ => {
+      // TODO make unboxed tuples more ergonomic
+      val f = impureFun(TermGetSize(t))
+      val LuaUnboxedTuple((w: Exp[Int], h: Exp[Int])) = f(()).asInstanceOf[Exp[LuaUnboxedTuple[(Any, Any)]]]
+      LuaUnboxedTuple(w -> h)(manifestTyp)
+    }
 }

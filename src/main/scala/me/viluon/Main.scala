@@ -1,6 +1,7 @@
 package me.viluon
 
-import me.viluon.computercraft.{EventHandling, FunctionalRendering}
+import me.viluon.computercraft.dataStructures.LinkedLists
+import me.viluon.computercraft.{Compression, EventHandling, FunctionalRendering}
 import me.viluon.lua.computercraft.CCProgram
 
 import java.io.FileWriter
@@ -14,18 +15,15 @@ object Main {
       val (w, h, x, y) = setUpTerm()
 
       handleEvents { (tag, arg, _, _, _) =>
-        val grey = encode(Colours.Cyan, Colours.White, "x")
+        val grey = encode(Colours.Grey, Colours.White, "x")
         val white = encode(Colours.White, Colours.Black, ".")
-        render(
-          fastShrink(
-            circle(
-              solid(grey),
-              solid(white),
-              (20, 20),
-              3 * (math.sin(2 * os.clock()) + 1) + 3
-            )
-          )
+        val image = circle(
+          solid(grey),
+          solid(white),
+          (20, 20),
+          3 * (math.sin(2 * os.clock()) + 1) + 3
         )
+        render(fastShrink(image))
       }
     }
   }
@@ -39,5 +37,9 @@ object Main {
     fw2.write(Hello.compiled._1)
     fw2.close()
 //    println(Hello.scala)
+//    Hello.testLzwCompression()
+    println(new CCProgram with LinkedLists {
+      override def main(): Exp[Unit] = testDS()
+    }.lua)
   }
 }

@@ -1,9 +1,11 @@
 package me.viluon.lua.computercraft.lang
 
+import me.viluon.lua.lang.LuaUnpack
+
 import scala.lms.common.Base
 import scala.reflect.SourceContext
 
-trait Term extends Base {
+trait Term extends Base with LuaUnpack {
   object Colours extends Enumeration {
     type Colour = Value
     val White    : Colour = Value(0)
@@ -35,5 +37,5 @@ trait Term extends Base {
   def termLike_setTextColour(implicit pos: SourceContext): Rep[TermLike] => Rep[Int] => Rep[Unit]
   def termLike_setBackgroundColour(implicit pos: SourceContext): Rep[TermLike] => Rep[Int] => Rep[Unit]
   def termLike_clear(implicit pos: SourceContext): Rep[TermLike] => Rep[Unit] => Rep[Unit]
-  def termLike_getSize(implicit pos: SourceContext): Rep[TermLike] => Rep[Array[Int]]
+  def termLike_getSize(implicit pos: SourceContext): Rep[TermLike] => Rep[Unit] => LuaUnboxedTuple[(Rep[Int], Rep[Int])]
 }

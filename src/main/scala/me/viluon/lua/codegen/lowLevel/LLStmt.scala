@@ -10,11 +10,17 @@ trait LLStmtOps { self: QuoteGen =>
   sealed trait LLExpr {
     def expr(uses: List[self.IR.Sym[Any]]): String
     val uses: List[self.IR.Sym[Any]]
+    def arity: Int = uses.length
 
     def substituted(allocation: Map[self.IR.Sym[Any], self.IR.Sym[Any]]): LLExpr = this match {
       case LLExprStandalone(exprGen, uses) => LLExprStandalone(exprGen, uses.map(allocation))
       case LLFunctionHeader(args, bodyLen, uses) => LLFunctionHeader(args, bodyLen, uses.map(allocation))
     }
+
+    def +(other: LLExpr): LLExpr = LLExpr((uses: List[self.IR.Sym[Any]]) => {
+      val (lhs, rhs) = (this.expr(uses.take(arity)), other.expr(uses.drop(arity)))
+      lhs + rhs
+    }, this.uses ++ other.uses)
   }
 
   object LLExpr {

@@ -8,21 +8,18 @@ trait LuaStructGen extends BaseGen with QuoteGen {
   import IR._
 
   private def accessString(name: String, dot: String = "."): String = {
-    val n = NameTransformer.decode(name)
-    if (n == name) s"$dot$n" else "[\"" + n + "\"]"
-  }
+      val nm = name
+      val decoded = NameTransformer.decode(nm)
+      if (decoded == nm) s"$dot$decoded" else "[\"" + decoded + "\"]"
+    }
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case Struct(_tag, fields) =>
-      val str = "{\n" + fields.map({
-        case (name, value) => q"\t${accessString(name, "")} = $value;\n"
-      }) + "}"
-      val uses = fields.map(_._2).flatMap(syms).toList
-      emitValDef(sym, LLExpr(???, uses))
+      emitValDef(sym, l"{\n" + fields.map({
+        case (name, value) => l"\t${accessString(name, "")} = $value;\n"
+      }).reduceOption(_ + _).getOrElse(l"") + l"}")
     case FieldApply(struct, index) =>
-      val uses = syms(struct) ++ syms(index)
-      val str = q"$struct${accessString(index)}"
-      emitValDef(sym, LLExpr(???, uses))
+      emitValDef(sym, l"$struct${accessString(index)}")
     case _ => super.emitNode(sym, rhs)
   }
 }

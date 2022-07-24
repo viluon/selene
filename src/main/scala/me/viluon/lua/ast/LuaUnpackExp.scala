@@ -8,7 +8,9 @@ import scala.reflect.SourceContext
 
 trait LuaUnpackExp extends LuaUnpack with TupledFunctionsExp with ArrayOpsExp {
   // TODO could we deprecate this in favour of LMS's UnboxedTuple?
-  case class LuaUnboxedTuple[T: Typ](t: T)
+  case class LuaUnboxedTuple[T: Typ](t: T) {
+    def map[U: Typ](f: T => U): LuaUnboxedTuple[U] = LuaUnboxedTuple(f(t))
+  }
 
   case class DummyRead[A]() extends Def[A]
 

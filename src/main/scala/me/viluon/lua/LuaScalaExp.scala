@@ -2,10 +2,10 @@ package me.viluon.lua
 
 import me.viluon.dsl.{DslExp, DslGen}
 import me.viluon.lua.LuaUtils.formatLua
-import me.viluon.lua.ast.{LuaArrayBufferOpsExp, LuaArrayOpsExpOpt, LuaMathExp, LuaModExp, LuaStringExp, LuaTupledFunctionsExp, LuaUnpackExp}
+import me.viluon.lua.ast._
 import me.viluon.lua.codegen.LuaCodegen
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.StringWriter
 import scala.language.reflectiveCalls
 import scala.lms.common._
 
@@ -33,12 +33,20 @@ trait LuaScalaExp extends LuaScala
   with SeqOpsExp
   with ArrayOpsExp
   with ArrayOpsExpOpt
+  with ListOpsExpOpt
+  with ImplicitOpsExp
+  with IOOpsExp
+  with RangeOpsExp
   with LuaArrayBufferOpsExp
   with LuaArrayOpsExpOpt
   with LuaUnpackExp
-  with LuaStringExp
+  with LuaStringAPIExp
   with LuaModExp
   with LuaMathExp
+  with LuaDynamicsExp
+  with LuaStringOpsExp
+  with LuaListOpsExp
+  with LuaMapExp
 
 /**
  * [[LuaDSL]] extends Lua expressions in Scala ([[LuaScalaExp]]) with codegen ([[LuaCodegen]]).

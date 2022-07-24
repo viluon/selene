@@ -19,7 +19,7 @@ trait TermGen extends LuaEffectGen with QuoteGen {
     case TermSetCursorPos(t) => emitValDef(sym, l"$t.setCursorPos")
     case TermSetTextColour(t) => emitValDef(sym, l"$t.setTextColour")
     case TermSetBackgroundColour(t) => emitValDef(sym, l"$t.setBackgroundColour")
-    case TermGetSize(t) => emitValDef(sym, l"{ $t.getSize() }")
+    case TermGetSize(t) => emitValDef(sym, l"$t.getSize")
     case TermClear(t) => emitValDef(sym, l"$t.clear")
     case UnsafeCoerce(src) => emitValDef(sym, l"$src")
     case _ => super.emitNode(sym, rhs)

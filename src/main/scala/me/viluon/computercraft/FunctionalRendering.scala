@@ -14,11 +14,11 @@ trait FunctionalRendering extends CCLibrary {
   }
 
   def decode(px: Rep[Pixel]): (Rep[Colour], Rep[Colour], Rep[String]) = {
-    val frac_ch = %(px, 1)
+    val frac_ch = px % 1
     val shifted = px / 256
-    val frac_fg_ch = %(shifted, 1)
+    val frac_fg_ch = shifted % 1
     val bg = shifted - frac_fg_ch
-    val fg = %(px, 256) - frac_ch
+    val fg = (px % 256) - frac_ch
     val ch = frac_ch * 256
     (bg.toColour, fg.toColour, string.char(ch.asInstanceOf[Rep[Int]]))
   }
@@ -27,10 +27,16 @@ trait FunctionalRendering extends CCLibrary {
 
   def solid(px: Rep[Pixel]): Image = (_x, _y) => px
 
+  def checker(white: Image, black: Image, w: Int, h: Int): Image = (x, y) => {
+    val i = x / w
+    val j = y / h
+    if ((i + j) % 2 == 0) white(x, y) else black(x, y)
+  }
+
   def square[T: Typ : Numeric](x: Rep[T]): Rep[T] = x * x
 
   def circle(inner: Image, outer: Image, centre: (Rep[Int], Rep[Int]), radius: Rep[Double]): Image = (x, y) =>
-    if ((square(x - centre._1) + square(y - centre._2)).toDouble() < square(radius)) inner(x, y)
+    if ((square(x - centre._1) + square(y - centre._2)).toDouble < square(radius)) inner(x, y)
     else outer(x, y)
 
   /**
@@ -39,14 +45,17 @@ trait FunctionalRendering extends CCLibrary {
    */
   def fastShrink(img: Image): Image = { (x, y) =>
     val points = for {
-      yOffset <- 0 until 3
-      xOffset <- 0 until 2
+      // ranges would be implicitly converted to Lua representations,
+      // so we annotate them as Scala ranges explicitly. Iterations over
+      // Scala ranges will be staged, erasing the loops.
+      yOffset <- 0 until 3: Range
+      xOffset <- 0 until 2: Range
     } yield decode(img(x * 2 + xOffset, y * 3 + yOffset))._1
 
     var sub: Var[Int] = 15
     var char: Var[Int] = 0
 
-    for (i <- 0 until 5) {
+    for (i <- 0 until 5: Range) {
       if (points(i) != points(5)) {
         sub = points(i).toInt
         char = readVar(char) + scala.math.pow(2.0, i.toDouble).toInt
@@ -60,8 +69,7 @@ trait FunctionalRendering extends CCLibrary {
   }
 
   def render(img: Image): Rep[Unit] = {
-    val size = term.getSize()
-    val (w, h) = (size(1), size(2))
+    val LuaUnboxedTuple((w, h)) = term.getSize()
     var y: Var[Int] = 1
     while (readVar(y) <= h) {
       var x: Var[Int] = 1
@@ -79,9 +87,7 @@ trait FunctionalRendering extends CCLibrary {
   }
 
   def setUpTerm(): (Rep[Int], Rep[Int], Rep[Int], Rep[Int]) = {
-    val size = term.getSize()
-    val w = size(1)
-    val h = size(2)
+    val LuaUnboxedTuple((w, h)) = term.getSize()
     val x = w / 2
     val y = h / 2
     term.setTextColour(Colours.LightBlue)

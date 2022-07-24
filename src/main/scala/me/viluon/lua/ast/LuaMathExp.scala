@@ -5,7 +5,7 @@ import me.viluon.lua.lang.LuaMath
 import scala.lms.common.FunctionsExp
 import scala.reflect.SourceContext
 
-trait LuaMathExp extends LuaMath with FunctionsExp with LuaFunctionUtils {
+trait LuaMathExp extends LuaMath with FunctionsExp with LuaUnpackExp with LuaFunctionUtils {
   case class LuaPow[T: Typ : Numeric](base: Exp[T], exp: Exp[T]) extends Def[T]
   case class MathSin(api: Exp[MathAPI]) extends Def[Double => Double]
   case class GlobalMath() extends Def[MathAPI]

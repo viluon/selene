@@ -1,9 +1,9 @@
 package me.viluon.lua.codegen
 
-import me.viluon.lua.ast.LuaStringExp
+import me.viluon.lua.ast.LuaStringAPIExp
 
 trait LuaStringGen extends LuaCoreCodegen {
-  val IR: LuaStringExp
+  val IR: LuaStringAPIExp
   import IR._
 
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {

@@ -16,6 +16,7 @@ trait CCCodegen extends LuaCodegen with TermGen with OsGen {
 }
 
 trait CCLibrary extends LuaScalaExp with ComputerCraftExp { self =>
+  implicit val initialCtx: SourceContext = SourceContext("main", Nil)
   val nil: Rep[Unit] = unit(())
   val ccGen = new CCCodegen {
     override val IR: self.type = self
@@ -23,8 +24,6 @@ trait CCLibrary extends LuaScalaExp with ComputerCraftExp { self =>
 }
 
 abstract class CCProgram extends CCLibrary {
-  implicit val initialCtx: SourceContext = SourceContext("main", Nil)
-
   def main(): Rep[Unit]
 
   lazy val compiled: (String, String) = compile()
