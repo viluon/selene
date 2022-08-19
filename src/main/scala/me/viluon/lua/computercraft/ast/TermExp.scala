@@ -71,7 +71,7 @@ trait TermExp extends Term with LuaScalaExp with LuaFunctionUtils {
     t => _ => {
       // TODO make unboxed tuples more ergonomic
       val f = impureFun(TermGetSize(t))
-      val LuaUnboxedTuple((w: Exp[Int], h: Exp[Int])) = f(()).asInstanceOf[Exp[LuaUnboxedTuple[(Any, Any)]]]
+      val LuaUnboxedTuple((w: Exp[Int] @unchecked, h: Exp[Int] @unchecked)) = f(()).asInstanceOf[Exp[LuaUnboxedTuple[(Any, Any)]]]
       LuaUnboxedTuple(w -> h)(manifestTyp)
     }
 }

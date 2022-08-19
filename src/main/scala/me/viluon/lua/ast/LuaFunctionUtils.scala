@@ -33,7 +33,7 @@ trait LuaFunctionUtils {
     }
 
   def expOfUnboxIsUnboxOfExp[A <: Product : Typ](x: Exp[LuaUnboxedTuple[A]]): LuaUnboxedTuple[Exp[A]] = {
-    val LuaUnboxedTuple(t: Exp[A]) = x
+    val LuaUnboxedTuple(t: Exp[A] @unchecked) = x
     LuaUnboxedTuple[Exp[A]](t)(simpleClassTyp(classOf[Exp[A]]))
   }
 }

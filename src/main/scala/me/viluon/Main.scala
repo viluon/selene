@@ -9,7 +9,8 @@ import java.io.FileWriter
 object Main {
   object Hello extends CCProgram
     with FunctionalRendering
-    with EventHandling {
+    with EventHandling
+    with Compression {
 
     def main(): Rep[Unit] = {
       val (w, h, x, y) = setUpTerm()
@@ -29,15 +30,17 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    println(Hello.lua)
-    val fw = new FileWriter("/tmp/hello.lua")
-    fw.write(Hello.lua)
-    fw.close()
-    val fw2 = new FileWriter("/tmp/hello-unallocated.lua")
-    fw2.write(Hello.compiled._1)
-    fw2.close()
+//    println(Hello.lua)
+//    val fw = new FileWriter("/tmp/hello.lua")
+//    fw.write(Hello.lua)
+//    fw.close()
+//    val fw2 = new FileWriter("/tmp/hello-unallocated.lua")
+//    fw2.write(Hello.compiled._1)
+//    fw2.close()
+
 //    println(Hello.scala)
 //    Hello.testLzwCompression()
+
     println(new CCProgram with LinkedLists {
       override def main(): Exp[Unit] = testDS()
     }.lua)

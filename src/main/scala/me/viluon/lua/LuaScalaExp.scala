@@ -47,6 +47,8 @@ trait LuaScalaExp extends LuaScala
   with LuaStringOpsExp
   with LuaListOpsExp
   with LuaMapExp
+  with LuaADTsExp
+  with LuaErrorExp
 
 /**
  * [[LuaDSL]] extends Lua expressions in Scala ([[LuaScalaExp]]) with codegen ([[LuaCodegen]]).

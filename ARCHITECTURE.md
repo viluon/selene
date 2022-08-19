@@ -25,3 +25,7 @@ I'd like to get some example CC applications working. Event handling should now 
 
 - get some interactive FRP examples working
 - come up with an inlining transformation to cut down on the number of locals
+
+### Random tips
+
+- if your `if` expression isn't virtualized, it's probably because the expected type is something other than `Rep[T]`.

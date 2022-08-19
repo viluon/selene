@@ -1,6 +1,6 @@
 package me.viluon.lua
 
-import me.viluon.lua.lang.{LuaDynamics, LuaMap, LuaMath, LuaMod, LuaStringAPI, LuaUnpack}
+import me.viluon.lua.lang.{LuaADTs, LuaDynamics, LuaError, LuaMap, LuaMath, LuaMod, LuaStringAPI, LuaUnpack}
 
 import scala.lms.common._
 
@@ -35,6 +35,8 @@ trait LuaBase extends Base
   with LuaMod
   with LuaMath
   with LuaDynamics
+  with LuaADTs
+  with LuaError
 
 /**
  * Provides Lua DSL functionality based on [[LuaBase]] with lifting.

@@ -11,7 +11,7 @@ trait LuaArrayOpsExpOpt extends ArrayOpsExpOpt {
 
       val rhs = for {
         TP(_, rhs) <- findDefinition(vs)
-        ArrayFromSeq(xs: Seq[Exp[T]]) <- Some(rhs)
+        ArrayFromSeq(xs: Seq[Exp[T]] @unchecked) <- Some(rhs)
         if n <= xs.length && n >= 1
         elem = xs(n - 1)
         Const(_) <- Some(elem)

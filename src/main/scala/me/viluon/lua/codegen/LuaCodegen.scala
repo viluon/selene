@@ -26,6 +26,7 @@ trait LuaCodegen extends LuaCoreCodegen
   with LuaModGen
   with LuaBooleanOpsGen
   with LuaMathGen
+  with LuaErrorGen
   with LuaArrayBufferOpsGen
   with LuaSeqOpsGen {
   val IR: LuaScalaExp
