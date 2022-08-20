@@ -35,7 +35,6 @@ trait LuaBase extends Base
   with LuaMod
   with LuaMath
   with LuaDynamics
-  with LuaADTs
   with LuaError
 
 /**
@@ -49,3 +48,4 @@ trait LuaScala extends LuaBase
   with LiftBoolean
   with LiftPrimitives
   with LiftArrays
+  with LuaADTs

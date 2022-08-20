@@ -2,12 +2,15 @@ package me.viluon.lua.lang
 
 import scala.collection.mutable.ArrayBuffer
 import scala.language.{dynamics, higherKinds, implicitConversions}
-import scala.lms.common.{Base, BooleanOps, IfThenElse, LiftString, Record, StringOps, StructOps, TupleOps}
+import scala.lms.common.{Base, BooleanOps, Equal, Functions, IfThenElse, LiftBoolean, LiftString, Record, StringOps, StructOps, TupleOps}
 import scala.reflect.SourceContext
 
-trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps with TupleOps with StringOps with LuaError =>
+trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps
+  with TupleOps with StringOps with LuaError with LiftString
+  with Functions with Equal =>
   case class InvalidPatternException(msg: String) extends RuntimeException(msg)
   implicit def anyTyp: Typ[Any]
+  implicit def eitherTyp[L, R]: Typ[Either[L, R]]
 
   trait StagedDynamic extends Dynamic {
     def selectDynamic[A](name: String): Rep[A]
@@ -18,7 +21,7 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
    */
   case class SwitchOps[A](adt: ADT[A], self: Rep[ADT[A]])(implicit src: SourceContext)
     extends StagedDynamic {
-    private val cases: ArrayBuffer[(Boolean, Rep[Any])] = collection.mutable.ArrayBuffer()
+    private val cases: ArrayBuffer[(Boolean, () => Rep[Any])] = collection.mutable.ArrayBuffer()
 
     // upcast needed here,
     // see https://stackoverflow.com/questions/17072185/understanding-the-limits-of-scala-gadt-support
@@ -69,7 +72,7 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
           case _: Left.type => false -> adt.asInstanceOf[ADTSum2[_, _]].l
           case _: Right.type => true -> adt.asInstanceOf[ADTSum2[_, _]].r
         }
-        cases += flag -> f(
+        cases += flag -> (() => f(
           CaptureOps(captures.zipWithIndex.map {
             case (name, i) if ctor.typ.isInstanceOf[ADTProduct2[_, _]] =>
               val product = ctor.typ.asInstanceOf[ADTProduct2[_, _]]
@@ -81,18 +84,19 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
                 case _ => throw InvalidPatternException(s"the product type ${product.name} has only 2 fields")
               })
             case _ => throw InvalidPatternException(s"trying to capture fields from ${ctor.typ}")
-          }.toMap, src)
+          }.toMap, src))
         )
       }
     }
 
-    def patternMatch[B](x: Rep[B]): Rep[B] = if (cases.nonEmpty) {
-      val tag = self.asInstanceOf[Sum2Rep[Any]].t
-      for ((flag, ctor) <- cases) {
-        if (tag == flag) return ctor.asInstanceOf[Rep[B]]
-      }
-      error("no match for " + tag)
-    } else x
+    def patternMatch[B: Typ](x: Rep[B]): Rep[B] = if (cases.isEmpty) x else {
+      val tag: Rep[Boolean] = self.asInstanceOf[Sum2Rep[Any]].t
+
+      cases.foldLeft[Unit => Rep[B]](_ => error("no match for " + tag)) {
+        case (acc, (flag, rhs)) => _ =>
+          if (tag == unit(flag)) rhs().asInstanceOf[Rep[B]] else acc()
+      }(())
+    }
 
     sealed trait ExperimentalPattern {
       def apply(captures: String*)(implicit src: SourceContext): PatternOps =
@@ -135,7 +139,7 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
       field
     )
 
-    def switch[B](v: Rep[self.type])(f: SwitchOps[A] => Rep[B])(implicit src: SourceContext): Rep[B] = {
+    def switch[B: Typ](v: Rep[self.type])(f: SwitchOps[A] => Rep[B])(implicit src: SourceContext): Rep[B] = {
       val ops = SwitchOps(self, v)
       // run the user switch body. This may fill in cases for sum types.
       // The go() method then takes care of either emitting appropriate
@@ -150,8 +154,8 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
 
   case class PatSum2[A: Typ, B: Typ, R: Typ](l: Rep[A] => Rep[R], r: Rep[B] => Rep[R]) extends Pattern[Either[A, B], R] {
     override def apply(v: Rep[ADT[Either[A, B]]]): Rep[R] =
-      if (v.asInstanceOf[Sum2Rep[Any]].t) l(v.asInstanceOf[Sum2Rep[A]].v)
-      else r(v.asInstanceOf[Sum2Rep[B]].v)
+      if (v.asInstanceOf[Sum2Rep[Any]].t) r(v.asInstanceOf[Sum2Rep[B]].v)
+      else l(v.asInstanceOf[Sum2Rep[A]].v)
   }
 
   implicit class PatProduct2[A: Typ, B: Typ, R](p: (Rep[A], Rep[B]) => Rep[R]) extends Pattern[(A, B), R] {
@@ -222,13 +226,13 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps wit
   implicit def eitherToTaggedUnion[A, B](e: Either[Rep[A], Rep[B]]): Rep[Either[A, B]] = e match {
     case Left(a) =>
       val record: Sum2Rep[A] = new Record {
-        val t: Boolean = unit(true)
+        val t: Boolean = unit(false)
         val v: Any = a
       }.asInstanceOf[Sum2Rep[A]]
       record.asInstanceOf[Rep[Either[A, B]]]
     case Right(b) =>
       val record: Sum2Rep[B] = new Record {
-        val t: Boolean = unit(false)
+        val t: Boolean = unit(true)
         val v: Any = b
       }.asInstanceOf[Sum2Rep[B]]
       record.asInstanceOf[Rep[Either[A, B]]]

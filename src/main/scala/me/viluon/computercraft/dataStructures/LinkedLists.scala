@@ -57,28 +57,28 @@ trait LinkedLists extends CCLibrary {
     }
   }
 
-  def testDS(): Rep[Unit] = {
+  def testDSfull(): Rep[Unit] = {
     val x: Rep[Complex] = new Complex {
       override val real = 1.0
       override val imaginary = 2.0
     }
-    println(x)
-    println(x.imaginary)
+//    println(x)
+//    println(x.imaginary)
 
     // complex number datatype via ADTs
     implicit val ADTComplex = ("real" -> ADTDouble()) * ("imaginary" -> ADTDouble())
     // sadly, we have to call the implicit make_tuple2 manually, I'm not sure why
     val y = ADTComplex(make_tuple2((1.0, 2.0)))
-    println(y)
+//    println(y)
     // match on the complex number and extract the imaginary part
-    println(((_: Rep[Double], im: Rep[Double]) => im)(y))
+//    println(((_: Rep[Double], im: Rep[Double]) => im)(y))
     // or do it with dynamics
-    println(ADTComplex.switch(y)(_.imaginary))
+//    println(ADTComplex.switch(y)(_.imaginary))
     // maybe with a helper?
-    def switch[A, Adt <: ADT[A], R](x: Rep[Adt])(f: SwitchOps[A] => Rep[R])(implicit adt: Adt): Rep[R] =
+    def switch[A, Adt <: ADT[A], R: Typ](x: Rep[Adt])(f: SwitchOps[A] => Rep[R])(implicit adt: Adt): Rep[R] =
       adt.switch(x.asInstanceOf[Rep[adt.type]])(f)
     // doesn't help at all...
-    println((switch[(Double, Double), ADT[(Double, Double)], Any](y)(_.imaginary)))
+//    println((switch[(Double, Double), ADT[(Double, Double)], Any](y)(_.imaginary)))
 
     // TODO maybe there's hope for extension methods via implicit classes for cases like these,
     //  but beware that there are many ADTs of the (Double, Double) type signature. The type inference
@@ -109,14 +109,52 @@ trait LinkedLists extends CCLibrary {
     import ops.RepSumOps
 
     // test them out
-    val z5 = for {
-      a <- z3
-      b <- z4
-    } yield a.real[Double] + b.imaginary[Double]
+//    val z5 = for {
+//      a <- z3
+//      b <- z4
+//    } yield a.real[Double] + b.imaginary[Double]
 
-    println(z4)
-    println(OptComplex(none))
-    println(z5)
+    OptComplex.switch(OptComplex(some((42.0, 666.0)))) { ops =>
+      import ops._
+      Left() ~~> { _ =>
+        println("nothing here")
+      }
+      Right("real", "imaginary") ~~> { x =>
+        println("real part is " + x.real)
+      }
+      nil.asInstanceOf[Rep[Either[Unit, Double]]]
+    }
+
+    nil
+//    println(z4)
+//    println(OptComplex(none))
+//    println(z5)
+  }
+
+  def testDS(): Rep[Unit] = {
+    def none[A]: Rep[Either[Unit, A]] = eitherToTaggedUnion(Left(()))
+    def some[A](x: Rep[A]): Rep[Either[Unit, A]] = eitherToTaggedUnion(Right(x))
+    implicit def tup2(t: (Double, Double)): Rep[(Double, Double)] = make_tuple2((t._1, t._2))
+
+    val ADTComplex = ("real" -> ADTDouble()) * ("imaginary" -> ADTDouble())
+    val OptComplex = ADTs.Option(ADTComplex)
+    implicit val optComplexTyp: Typ[OptComplex.type] = manifestTyp
+
+    val inspectOptComplex = fun { (maybeN: Rep[OptComplex.type]) =>
+      OptComplex.switch(maybeN) { ops =>
+        import ops._
+        Left() ~~> { _ =>
+          println("nothing here")
+        }
+        Right("real", "imaginary") ~~> { x =>
+          println("real part is " + x.real)
+        }
+        nil
+      }
+    }
+
+    inspectOptComplex(OptComplex(some((scala.math.Pi, 4.5))))
+    inspectOptComplex(OptComplex(none))
   }
 
 //  sealed trait LinkedList[+T]

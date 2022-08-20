@@ -17,7 +17,6 @@ trait LuaScalaExp extends LuaScala
   with BaseFatExp
   with NumericOpsExpOpt
   with OrderingOpsExpOpt
-  with EqualExpOpt
   with IfThenElseExpOpt
   with WhileExp
   with BooleanOpsExpOpt
@@ -41,6 +40,7 @@ trait LuaScalaExp extends LuaScala
   with LuaArrayOpsExpOpt
   with LuaUnpackExp
   with LuaStringAPIExp
+  with LuaEqualOptExp
   with LuaModExp
   with LuaMathExp
   with LuaDynamicsExp
