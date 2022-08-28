@@ -10,6 +10,8 @@ trait LuaStringGen extends LuaCoreCodegen {
     case GlobalString() => emitValDef(sym, l"string")
     case StringChar(string) => emitValDef(sym, l"$string.char")
     case StringByte(string) => emitValDef(sym, l"$string.byte")
+    case StringLengthViaAPI(string) => emitValDef(sym, l"$string.len")
+    case StringSub(string) => emitValDef(sym, l"$string.sub")
     case _ => super.emitNode(sym, rhs)
   }
 }

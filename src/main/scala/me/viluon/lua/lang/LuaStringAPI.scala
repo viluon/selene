@@ -11,7 +11,7 @@ trait LuaStringAPI extends Base with StringOps {
   def string_length(implicit pos: SourceContext): Rep[StringAPI] => Rep[String] => Rep[Int]
   def string_rep(implicit pos: SourceContext): Rep[StringAPI] => Rep[String] => Rep[Int] => Rep[String]
   def string_reverse(implicit pos: SourceContext): Rep[StringAPI] => Rep[String] => Rep[String]
-  def string_sub(implicit pos: SourceContext): Rep[StringAPI] => Rep[String] => Rep[Int] => Rep[Int] => Rep[String]
+  def string_sub(implicit pos: SourceContext): Rep[StringAPI] => Rep[(String, Int, Int)] => Rep[String]
 
   def string(implicit pos: SourceContext): Rep[StringAPI]
 }

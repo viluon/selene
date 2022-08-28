@@ -8,4 +8,6 @@ trait LuaMath extends Base {
   trait MathAPI
   def math(implicit pos: SourceContext): Rep[MathAPI]
   def math_sin(implicit pos: SourceContext): Rep[MathAPI] => Rep[Double] => Rep[Double]
+  def math_max(implicit pos: SourceContext): Rep[MathAPI] => Rep[(Double, Double)] => Rep[Double]
+  def math_min(implicit pos: SourceContext): Rep[MathAPI] => Rep[(Double, Double)] => Rep[Double]
 }

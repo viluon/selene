@@ -11,6 +11,7 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps
   case class InvalidPatternException(msg: String) extends RuntimeException(msg)
   implicit def anyTyp: Typ[Any]
   implicit def eitherTyp[L, R]: Typ[Either[L, R]]
+  def adtManifestTyp[T](implicit m: Manifest[T]): Typ[T]
 
   trait StagedDynamic extends Dynamic {
     def selectDynamic[A](name: String): Rep[A]
@@ -109,6 +110,7 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps
 
   sealed trait ADT[A] { self =>
     implicit def typ: Typ[A]
+    implicit val selfTyp: Typ[self.type] = adtManifestTyp
     final type TypeMember = A
     def name: String
 
@@ -145,6 +147,11 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps
       // The go() method then takes care of either emitting appropriate
       // pattern-matching code or just returning the value from user code instead.
       ops.patternMatch(f(ops))
+    }
+
+    implicit class ValueOps(x: Rep[self.type]) {
+      def switch[R: Typ](f: SwitchOps[self.TypeMember] => Rep[R])(implicit src: SourceContext): Rep[R] =
+        self.switch(x)(f)(implicitly, src)
     }
   }
 
@@ -254,6 +261,11 @@ trait LuaADTs extends Base { self: IfThenElse with BooleanOps with StructOps
 //    }
   }
 
+  def right[A](x: Rep[A]): Rep[Either[Nothing, A]] = eitherToTaggedUnion(Right(x))
+  def left[A](x: Rep[A]): Rep[Either[A, Nothing]] = eitherToTaggedUnion(Left(x))
+
+  def some[A](x: Rep[A]): Rep[Either[Unit, A]] = eitherToTaggedUnion(Right(x))
+  def none[A]: Rep[Either[Unit, A]] = eitherToTaggedUnion(Left(()))
 
 
   /**

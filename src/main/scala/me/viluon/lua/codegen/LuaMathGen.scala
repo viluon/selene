@@ -9,6 +9,8 @@ trait LuaMathGen extends LuaCoreCodegen {
   override def emitNode(sym: Sym[Any], rhs: Def[Any]): Unit = rhs match {
     case GlobalMath() => emitValDef(sym, l"math")
     case MathSin(math) => emitValDef(sym, l"$math.sin")
+    case MathMax(math) => emitValDef(sym, l"$math.max")
+    case MathMin(math) => emitValDef(sym, l"$math.min")
     case LuaPow(base, exp) => emitValDef(sym, l"$base ^ $exp")
     case _ => super.emitNode(sym, rhs)
   }

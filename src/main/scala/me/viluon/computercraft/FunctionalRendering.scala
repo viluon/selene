@@ -27,6 +27,12 @@ trait FunctionalRendering extends CCLibrary {
 
   def solid(px: Rep[Pixel]): Image = (_x, _y) => px
 
+  def text(sx: Rep[Int], sy: Rep[Int], str: Rep[String], bg: Rep[Colour] = Colours.White, fg: Rep[Colour] = Colours.Black): Image =
+    (x, y) =>
+      if (y == sy && x >= sx && x < sx + string.length(str))
+        encode(bg, fg, string.sub(str, x - sx + 1, x - sx + 1))
+      else encode()
+
   def checker(white: Image, black: Image, w: Int, h: Int): Image = (x, y) => {
     val i = x / w
     val j = y / h

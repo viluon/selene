@@ -92,15 +92,10 @@ trait LinkedLists extends CCLibrary {
     val z1 = OptComplex(Right[Rep[Unit], Rep[(Double, Double)]](make_tuple2((1.0, 2.0))))
     val z2 = OptComplex(eitherToTaggedUnion(Right(make_tuple2((1.0, 2.0)))))
 
-    def right[A](x: Rep[A]): Rep[Either[Nothing, A]] = eitherToTaggedUnion(Right(x))
-    def left[A](x: Rep[A]): Rep[Either[A, Nothing]] = eitherToTaggedUnion(Left(x))
     implicit def tup2(t: (Double, Double)): Rep[(Double, Double)] = make_tuple2((t._1, t._2))
 
     // with a few helpers, the usage gets a lot more ergonomic
     val z3 = OptComplex(right((scala.math.Pi, 4.5)))
-
-    def some[A](x: Rep[A]): Rep[Either[Unit, A]] = eitherToTaggedUnion(Right(x))
-    def none[A]: Rep[Either[Unit, A]] = eitherToTaggedUnion(Left(()))
 
     val z4 = OptComplex(some((1.0, 2.0)))
 
@@ -132,26 +127,22 @@ trait LinkedLists extends CCLibrary {
   }
 
   def testDS(): Rep[Unit] = {
-    def none[A]: Rep[Either[Unit, A]] = eitherToTaggedUnion(Left(()))
-    def some[A](x: Rep[A]): Rep[Either[Unit, A]] = eitherToTaggedUnion(Right(x))
     implicit def tup2(t: (Double, Double)): Rep[(Double, Double)] = make_tuple2((t._1, t._2))
 
     val ADTComplex = ("real" -> ADTDouble()) * ("imaginary" -> ADTDouble())
     val OptComplex = ADTs.Option(ADTComplex)
-    implicit val optComplexTyp: Typ[OptComplex.type] = manifestTyp
+    import OptComplex.{ValueOps, selfTyp}
 
-    val inspectOptComplex = fun { (maybeN: Rep[OptComplex.type]) =>
-      OptComplex.switch(maybeN) { ops =>
-        import ops._
-        Left() ~~> { _ =>
-          println("nothing here")
-        }
-        Right("real", "imaginary") ~~> { x =>
-          println("real part is " + x.real)
-        }
-        nil
+    val inspectOptComplex = fun[OptComplex.type, Unit](_.switch { ops =>
+      import ops._
+      Left() ~~> { _ =>
+        println("nothing here")
       }
-    }
+      Right("real", "imaginary") ~~> { x =>
+        println("real part is " + x.real)
+      }
+      nil
+    })
 
     inspectOptComplex(OptComplex(some((scala.math.Pi, 4.5))))
     inspectOptComplex(OptComplex(none))

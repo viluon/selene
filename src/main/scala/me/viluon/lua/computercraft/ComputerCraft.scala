@@ -2,16 +2,16 @@ package me.viluon.lua.computercraft
 
 import me.viluon.lua.LuaUtils.formatLua
 import me.viluon.lua.codegen.LuaCodegen
-import me.viluon.lua.computercraft.ast.{OsExp, TermExp}
-import me.viluon.lua.computercraft.gen.{OsGen, TermGen}
-import me.viluon.lua.computercraft.lang.{Os, Term}
+import me.viluon.lua.computercraft.ast.{KeysExp, OsExp, TermExp}
+import me.viluon.lua.computercraft.gen.{KeysGen, OsGen, TermGen}
+import me.viluon.lua.computercraft.lang.{Keys, Os, Term}
 import me.viluon.lua.{LuaScala, LuaScalaExp}
 
 import scala.reflect.SourceContext
 
-trait ComputerCraft extends LuaScala with Term with Os
-trait ComputerCraftExp extends ComputerCraft with TermExp with OsExp
-trait CCCodegen extends LuaCodegen with TermGen with OsGen {
+trait ComputerCraft extends LuaScala with Term with Os with Keys
+trait ComputerCraftExp extends ComputerCraft with TermExp with OsExp with KeysExp
+trait CCCodegen extends LuaCodegen with TermGen with OsGen with KeysGen {
   val IR: ComputerCraftExp
 }
 

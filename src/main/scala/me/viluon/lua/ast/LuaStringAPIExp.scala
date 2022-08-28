@@ -11,7 +11,7 @@ trait LuaStringAPIExp extends LuaStringAPI with FunctionsExp with LuaUnpackExp w
   case class StringLengthViaAPI(string: Exp[StringAPI]) extends Def[String => Int]
   case class StringRep(string: Exp[StringAPI]) extends Def[String => Int => String]
   case class StringReverse(string: Exp[StringAPI]) extends Def[String => String]
-  case class StringSub(string: Exp[StringAPI]) extends Def[String => Int => Int => String]
+  case class StringSub(string: Exp[StringAPI]) extends Def[((String, Int, Int)) => String]
 
   case class GlobalString() extends Def[StringAPI]
 
@@ -30,6 +30,10 @@ trait LuaStringAPIExp extends LuaStringAPI with FunctionsExp with LuaUnpackExp w
       case Const(s) => Const(s.length)(manifestTyp)
       case _ => string_length(implicitly)(api)(str)
     }
+    def sub(str: Exp[String], start: Exp[Int], end: Exp[Int])(implicit pos: SourceContext): Exp[String] = (str, start, end) match {
+      case (Const(s), Const(start), Const(end)) => Const(s.substring(start, end))(manifestTyp)
+      case _ => string_sub(implicitly)(api)(str, start, end)
+    }
   }
 
   override def string_byte(implicit pos: SourceContext): Exp[StringAPI] => Exp[String] => Exp[Int] =
@@ -42,8 +46,8 @@ trait LuaStringAPIExp extends LuaStringAPI with FunctionsExp with LuaUnpackExp w
     s => pureFun2(StringRep(s))
   override def string_reverse(implicit pos: SourceContext): Exp[StringAPI] => Exp[String] => Exp[String] =
     s => pureFun(StringReverse(s))
-  override def string_sub(implicit pos: SourceContext): Exp[StringAPI] => Exp[String] => Exp[Int] => Exp[Int] => Exp[String] =
-    s => pureFun3(StringSub(s))
+  override def string_sub(implicit pos: SourceContext): Exp[StringAPI] => Exp[(String, Int, Int)] => Exp[String] =
+    s => pureFun(StringSub(s))
 
   override def string(implicit pos: SourceContext): Exp[StringAPI] =
     toAtom(GlobalString())(manifestTyp, implicitly)

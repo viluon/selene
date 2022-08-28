@@ -10,4 +10,5 @@ trait LuaADTsExp extends LuaADTs { self: BaseExp with IfThenElse with BooleanOps
   override implicit val anyTyp: Typ[Any] = manifestTyp[Any]
   override implicit def eitherTyp[L, R]: Typ[Either[L, R]] =
     manifestTyp[Either[L, R]](Manifest.classType(classOf[Either[L, R]]))
+  override def adtManifestTyp[T](implicit m: Manifest[T]): Typ[T] = manifestTyp
 }

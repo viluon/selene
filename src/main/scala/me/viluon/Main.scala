@@ -1,6 +1,7 @@
 package me.viluon
 
 import me.viluon.computercraft.dataStructures.LinkedLists
+import me.viluon.computercraft.programs.Editor
 import me.viluon.computercraft.{Compression, EventHandling, FunctionalRendering}
 import me.viluon.lua.computercraft.CCProgram
 
@@ -41,8 +42,13 @@ object Main {
 //    println(Hello.scala)
 //    Hello.testLzwCompression()
 
-    println(new CCProgram with LinkedLists {
-      override def main(): Exp[Unit] = testDS()
-    }.lua)
+//    println(new CCProgram with LinkedLists {
+//      override def main(): Exp[Unit] = testDS()
+//    }.lua)
+
+    println(Editor.lua)
+    val fw = new FileWriter("/tmp/editor.lua")
+    fw.write(Editor.compiled._1)
+    fw.close()
   }
 }
