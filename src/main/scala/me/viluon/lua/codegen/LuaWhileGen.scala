@@ -1,8 +1,10 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.{BaseGenWhile, WhileExp}
 
-trait LuaWhileGen extends LuaEffectGen with QuoteGen {
+trait LuaWhileGen extends LuaEffectGen with QuoteGen { self: LLStmtMixin =>
   val IR: WhileExp
 
   import IR._

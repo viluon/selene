@@ -1,11 +1,12 @@
 package me.viluon.lua.codegen
 
 import me.viluon.lua.ast.LuaArrayBufferOpsExp
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
 
 import scala.lms.common.BaseGenArrayBufferOps
 
 // FIXME: most codegen traits ignore the BaseGen... traits
-trait LuaArrayBufferOpsGen extends LuaCoreCodegen {
+trait LuaArrayBufferOpsGen extends LuaCoreCodegen { self: LLStmtMixin =>
   val IR: LuaArrayBufferOpsExp
   import IR._
 

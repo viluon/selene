@@ -1,10 +1,13 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.EffectExp
 import scala.lms.internal.GenericNestedCodegen
 
 // FIXME copied verbatim from js.scala
 trait LuaNestedCodegen extends DummyNestedCodegen with LuaCoreCodegen with QuoteGen {
+  self: LLStmtMixin =>
   val IR: EffectExp
 
   import IR._
@@ -27,11 +30,12 @@ trait LuaNestedCodegen extends DummyNestedCodegen with LuaCoreCodegen with Quote
     luaCode += LLLocal(sym)
   }
 
-  // special case for recursive vals
-  def emitValDef(sym: Sym[Any], rhs: Exp[Any]): Unit = {
-    if (recursive contains sym)
-      emitAssignment(sym, rhs) // we have a forward declaration above.
-    else
-      super.emitValDef(sym, l"$rhs")
-  }
+  // TODO: do we need this?
+//  // special case for recursive vals
+//  def emitValDef(sym: Sym[Any], rhs: Exp[Any]): Unit = {
+//    if (recursive contains sym)
+//      emitAssignment(sym, rhs) // we have a forward declaration above.
+//    else
+//      super.emitValDef(sym, l"$rhs")
+//  }
 }

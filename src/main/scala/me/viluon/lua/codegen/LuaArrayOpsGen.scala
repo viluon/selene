@@ -1,8 +1,10 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.ArrayOpsExp
 
-trait LuaArrayOpsGen extends LuaEffectGen {
+trait LuaArrayOpsGen extends LuaEffectGen { self: LLStmtMixin =>
   val IR: ArrayOpsExp
   import IR._
 

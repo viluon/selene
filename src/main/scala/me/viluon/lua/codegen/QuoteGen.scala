@@ -1,8 +1,6 @@
 package me.viluon.lua.codegen
 
-import me.viluon.lua.codegen.lowLevel.LLStmtOps
-
-import scala.lms.internal.Expressions
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
 
 /**
  * String interpolator aiming to simplify the implementation of code generators.
@@ -17,8 +15,7 @@ import scala.lms.internal.Expressions
  * Provided `bar` is a `Rep[_]` and `bah` is not.
  */
 // TODO get rid of the circular dependency between these traits
-trait QuoteGen extends DummyGen { self: LLStmtOps =>
-
+trait QuoteGen extends DummyGen with LLStmtMixin {
   import language.implicitConversions
 
   trait Quote {

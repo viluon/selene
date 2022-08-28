@@ -1,9 +1,11 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.StructExp
 import scala.reflect.NameTransformer
 
-trait LuaStructGen extends BaseGen with QuoteGen {
+trait LuaStructGen extends BaseGen with QuoteGen { self: LLStmtMixin =>
   val IR: StructExp
   import IR._
 

@@ -1,8 +1,10 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.{BaseGenFunctions, TupledFunctionsExp}
 
-trait LuaFunctionGen extends LuaEffectGen with QuoteGen {
+trait LuaFunctionGen extends LuaEffectGen with QuoteGen { self: LLStmtMixin =>
   val IR: TupledFunctionsExp
 
   import IR._

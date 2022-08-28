@@ -31,6 +31,11 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
+    def save(str: String, path: String) = {
+      val writer = new FileWriter(path)
+      writer.write(str)
+      writer.close()
+    }
 //    println(Hello.lua)
 //    val fw = new FileWriter("/tmp/hello.lua")
 //    fw.write(Hello.lua)
@@ -47,8 +52,7 @@ object Main {
 //    }.lua)
 
     println(Editor.lua)
-    val fw = new FileWriter("/tmp/editor.lua")
-    fw.write(Editor.compiled._1)
-    fw.close()
+    save(Editor.compiled._1, "/tmp/editor-unallocated.lua")
+    save(Editor.compiled._2, "/tmp/editor.lua")
   }
 }

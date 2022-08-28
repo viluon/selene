@@ -1,8 +1,10 @@
 package me.viluon.lua.codegen
 
+import me.viluon.lua.codegen.lowLevel.LLStmtMixin
+
 import scala.lms.common.{BaseGenIfThenElse, IfThenElseExp}
 
-trait LuaIfThenElseGen extends LuaEffectGen with QuoteGen {
+trait LuaIfThenElseGen extends LuaEffectGen with QuoteGen { self: LLStmtMixin =>
   val IR: IfThenElseExp
 
   import IR._
